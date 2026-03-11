@@ -1,0 +1,23 @@
+<div class="item">
+
+<a href="{% url 'product_detail' product.id %}">
+
+{% if product.image %}
+<img src="{{ product.image.url }}">
+{% else %}
+<img src="/static/images/no-image.png">
+{% endif %}
+
+</a>
+
+<h3>{{ product.name }}</h3>
+
+<p class="product-desc">
+{{ product.description|truncatewords:8 }}
+</p>
+
+<a href="{% url 'add_to_cart' product.id %}" onclick="showCartPopup()">
+<button class="order-btn-small">Order Now</button>
+</a>
+
+</div>

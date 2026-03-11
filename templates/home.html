@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load static %}
+
+<section class="hero">
+
+<div class="hero-content">
+
+<h1>Fresh Cakes<br>Made With Love</h1>
+
+<p>
+Delicious homemade cakes, cookies, and sweets
+delivered to your doorstep!
+</p>
+
+<a href="{% url 'sweet_hub' %}" class="order-btn">
+Order Now
+</a>
+
+</div>
+
+</section>
+
+
+<h2 class="section-title">Featured Cakes</h2>
+
+<div class="featured-slider">
+
+{% for product in featured_cakes %}
+
+{% include "components/product_card.html" %}
+
+{% endfor %}
+
+</div>
+
+
+<h2 style="margin-top:40px;">Our Famous Items</h2>
+
+<div class="items-container">
+
+{% for product in products %}
+
+{% include "components/product_card.html" %}
+
+{% endfor %}
+
+</div>
+
+{% endblock %}

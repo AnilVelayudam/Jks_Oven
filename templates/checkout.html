@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h1>Checkout</h1>
+
+<h3>Total Amount: ₹{{ total }}</h3>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Place Order</button>
+</form>
+
+{% endblock %}

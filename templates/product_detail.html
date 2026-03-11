@@ -1,0 +1,59 @@
+<h2>Customer Reviews</h2>
+
+{% for review in reviews %}
+
+<div class="review-card">
+
+    <strong>{{ review.user.username }}</strong>
+
+    <div>
+        Rating:
+        {% for i in "12345" %}
+            {% if forloop.counter <= review.rating %}
+                ⭐
+            {% endif %}
+        {% endfor %}
+    </div>
+
+    <p>{{ review.comment }}</p>
+
+</div>
+
+{% empty %}
+
+<p>No reviews yet</p>
+
+{% endfor %}
+
+
+{% if user.is_authenticated %}
+
+<h3>Write a Review</h3>
+
+<form method="POST" action="{% url 'add_review' product.id %}">
+{% csrf_token %}
+
+<label>Rating</label>
+<select name="rating">
+<option value="5">⭐⭐⭐⭐⭐</option>
+<option value="4">⭐⭐⭐⭐</option>
+<option value="3">⭐⭐⭐</option>
+<option value="2">⭐⭐</option>
+<option value="1">⭐</option>
+</select>
+
+<br><br>
+
+<textarea name="comment" placeholder="Write your review"></textarea>
+
+<br><br>
+
+<button type="submit">Submit Review</button>
+
+</form>
+
+{% else %}
+
+<p>Please login to write a review.</p>
+
+{% endif %}

@@ -3,517 +3,9 @@
 <html>
 <head>
     <title>JK's Oven Point</title>
-    <style>
-        .nav-links a:nth-child(1),
-        .nav-links a:nth-child(2),
-        .nav-links a:nth-child(3),
-        .nav-links a:nth-child(4) {
-    color: #3B2F2A;
-}
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
+    {% load static %}
 
-        /* Navbar */
-        nav {
-            background-color: #D8D0C3;
-            padding: 12px 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-.logo-section img {
-    height: 60px;
-    width: 60px;
-    border-radius: 50%;
-    object-fit: cover;
-    background: white;
-    padding: 6px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.35);
-    transition: transform 0.3s ease;
-}
-
-/* Zoom effect when mouse hover */
-.logo-section img:hover {
-    transform: scale(1.15);
-}
-
-        .logo-text {
-            color: #3B2F2A;;
-            font-size: 22px;
-            font-weight: 600;
-            letter-spacing: 1px;
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 25px;
-        }
-
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            font-weight: 500;
-            transition: 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: #ffd700;
-        }
-
-        .container {
-            padding: 30px 60px;
-        }
-
-        /* Dropdown container */
-.dropdown {
-    position: relative;
-    display: inline-block;
-}
-
-/* Profile button */
-.dropbtn {
-    color: #3B2F2A;
-    cursor: pointer;
-    font-weight: 500;
-}
-
-/* Dropdown menu */
-.dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    background-color: white;
-    min-width: 130px;
-    box-shadow: 0px 4px 10px rgba(0,0,0,0.2);
-    border-radius: 5px;
-    overflow: hidden;
-}
-
-/* Dropdown links */
-.dropdown-content a {
-    color: #333;
-    padding: 10px 12px;
-    text-decoration: none;
-    display: block;
-}
-
-/* Hover effect */
-.dropdown-content a:hover {
-    background-color: #f2f2f2;
-}
-
-/* Show dropdown when hovering profile */
-.dropdown:hover .dropdown-content {
-    display: block;
-}
-
-/* Logout button styling */
-.dropdown-content button {
-    width: 100%;
-    border: none;
-    background: none;
-    padding: 10px 12px;
-    text-align: left;
-    cursor: pointer;
-}
-
-.dropdown-content button:hover {
-    background-color: #f2f2f2;
-}
-
-.hero{
-    height:400px;
-    background-image:url("{% static 'images/banner.jpg' %}");
-    background-size:cover;
-    background-position:center;
-    display:flex;
-    align-items:center;
-    padding-left:80px;
-}
-
-.hero-content{
-    color:white;
-    max-width:500px;
-}
-
-.hero-content h1{
-    font-size:42px;
-    margin-bottom:10px;
-}
-
-.hero-content p{
-    font-size:18px;
-    margin-bottom:20px;
-}
-
-.order-btn{
-    background:#ff7a2f;
-    color:white;
-    padding:12px 25px;
-    text-decoration:none;
-    border-radius:25px;
-    font-weight:bold;
-}
-
-.order-btn:hover{
-    background:#ff5c00;
-}
-
-/* Navbar layout */
-nav{
-display:flex;
-align-items:center;
-padding:12px 40px;
-background:#D8D0C3;
-}
-
-/* make search take middle space */
-.search-box{
-flex:1;
-display:flex;
-justify-content:center;
-}
-
-/* search input */
-.search-box input{
-width:650px;      /* increase this */
-padding:10px 18px;
-border-radius:25px;
-border:1px solid #ccc;
-outline:none;
-font-size:14px;
-text-align:left;
-}
-
-/* Cart icon */
-.cart-icon{
-position:relative;
-text-decoration:none;
-color:#3B2F2A;
-font-weight:600;
-}
-
-/* Cart badge */
-.cart-count{
-position:absolute;
-top:-8px;
-right:-12px;
-background:red;
-color:white;
-font-size:12px;
-padding:2px 6px;
-border-radius:50%;
-}
-
-/* Dropdown */
-.dropdown{
-position:relative;
-}
-
-.dropdown-content{
-display:none;
-position:absolute;
-background:white;
-min-width:140px;
-box-shadow:0 3px 10px rgba(0,0,0,0.2);
-border-radius:6px;
-padding:10px;
-}
-
-.dropdown-content a{
-display:block;
-padding:6px;
-text-decoration:none;
-color:black;
-}
-
-.dropdown:hover .dropdown-content{
-display:block;
-}
-
-.section-title{
-margin-top:40px;
-font-size:28px;
-color:#3B2F2A;
-}
-
-/* Grid Layout */
-.items-container{
-display:grid;
-grid-template-columns:repeat(auto-fill, minmax(220px,1fr));
-gap:25px;
-margin-top:20px;
-}
-
-/* Card */
-.item{
-background:white;
-padding:15px;
-border-radius:12px;
-text-align:center;
-box-shadow:0 4px 12px rgba(0,0,0,0.1);
-transition:0.3s;
-display:flex;
-flex-direction:column;
-align-items:center;
-}
-
-.item:hover{
-transform:translateY(-6px);
-}
-
-/* Image */
-.item img{
-width:100%;
-height:180px;
-object-fit:cover;
-border-radius:10px;
-}
-
-/* Button */
-.item button{
-margin-top:10px;
-background:#ff7a00;
-border:none;
-color:white;
-padding:8px 15px;
-border-radius:6px;
-cursor:pointer;
-font-weight:500;
-}
-
-.item button:hover{
-background:#e56700;
-}
-
-
-
-.footer{
-background:#3B2F2A;
-color:white;
-margin-top:60px;
-padding-top:40px;
-}
-
-.footer-container{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-gap:30px;
-padding:0 60px 40px 60px;
-}
-
-.footer-section h3{
-margin-bottom:10px;
-}
-
-.footer-section p{
-font-size:14px;
-line-height:1.6;
-}
-
-.footer-section a{
-display:block;
-color:white;
-text-decoration:none;
-margin-bottom:6px;
-font-size:14px;
-}
-
-.footer-section a:hover{
-color:#ff7a00;
-}
-
-.footer-bottom{
-text-align:center;
-padding:15px;
-border-top:1px solid rgba(255,255,255,0.2);
-font-size:13px;
-}
-
-/* Review section title */
-.review-title{
-margin-top:40px;
-font-size:26px;
-color:#3B2F2A;
-}
-
-/* Review card */
-.review-card{
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 4px 12px rgba(0,0,0,0.1);
-margin-bottom:20px;
-}
-
-/* Username */
-.review-card strong{
-font-size:16px;
-color:#333;
-}
-
-/* Stars */
-.review-stars{
-color:#ffb400;
-margin:5px 0;
-}
-
-/* Review text */
-.review-card p{
-font-size:14px;
-color:#444;
-line-height:1.6;
-}
-
-.review-form{
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 4px 12px rgba(0,0,0,0.1);
-margin-top:30px;
-max-width:500px;
-}
-
-.review-form label{
-font-weight:600;
-}
-
-.review-form select,
-.review-form textarea{
-width:100%;
-padding:10px;
-margin-top:8px;
-border-radius:6px;
-border:1px solid #ccc;
-font-size:14px;
-}
-
-.review-form textarea{
-height:100px;
-resize:none;
-}
-
-.review-form button{
-margin-top:10px;
-background:#ff7a00;
-border:none;
-color:white;
-padding:10px 16px;
-border-radius:6px;
-cursor:pointer;
-font-weight:500;
-}
-
-.review-form button:hover{
-background:#e56700;
-}
-
-.price{
-font-size:18px;
-font-weight:600;
-color:#3B2F2A;
-margin-top:5px;
-}
-
-.item img{
-transition:0.3s;
-}
-
-.item:hover img{
-transform:scale(1.05);
-}
-
-
-.cart-popup{
-position:fixed;
-top:20px;
-right:20px;
-background:#28a745;
-color:white;
-padding:12px 20px;
-border-radius:8px;
-font-size:14px;
-box-shadow:0 4px 12px rgba(0,0,0,0.2);
-opacity:0;
-transform:translateY(-20px);
-transition:0.4s;
-z-index:999;
-}
-
-.cart-popup.show{
-opacity:1;
-transform:translateY(0);
-}
-
-
-
-.item h3{
-font-size:16px;
-margin:10px 0 5px;
-color:#333;
-}
-
-.price{
-font-size:18px;
-font-weight:600;
-color:#3B2F2A;
-margin-bottom:10px;
-}
-
-.item a{
-text-decoration:none;
-color:inherit;
-}
-
-.product-desc{
-font-size:13px;
-color:#555;
-margin:6px 0 10px;
-line-height:1.4;
-}
-
-.product-desc{
-font-size:13px;
-color:#555;
-margin:6px 0 10px;
-line-height:1.4;
-max-width:200px;
-}
-
-
-.featured-slider{
-display:flex;
-gap:20px;
-overflow-x:auto;
-scroll-behavior:smooth;
-padding-bottom:10px;
-margin-bottom:30px;
-}
-
-.featured-slider .item{
-min-width:220px;
-}
-
-.featured-slider::-webkit-scrollbar{
-height:6px;
-}
-
-.featured-slider::-webkit-scrollbar-thumb{
-background:#ccc;
-border-radius:10px;
-}
-    </style>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     
@@ -529,9 +21,17 @@ border-radius:10px;
 
 <!-- CENTER : Search -->
 <div class="search-box">
-    <input type="text" placeholder="Search cakes, cookies and more...">
-</div>
 
+<input 
+type="text"
+id="search-input"
+placeholder="Search cakes, cookies and more..."
+autocomplete="off"
+>
+
+<div id="search-results" class="search-results"></div>
+
+</div>
 
 <!-- RIGHT : Navigation -->
 <div class="nav-links">
@@ -579,9 +79,6 @@ border-radius:10px;
 </div>
 
 
-
-</div>
-
 <div id="cart-popup" class="cart-popup">
     ✔ Product added to cart
 </div>
@@ -598,6 +95,89 @@ setTimeout(() => {
     popup.classList.remove("show");
 }, 2000);
 
+}
+
+</script>
+
+
+<script>
+
+const input = document.getElementById("search-input");
+const resultsBox = document.getElementById("search-results");
+
+input.addEventListener("keyup", function(){
+
+let query = input.value;
+
+if(query.length < 1){
+resultsBox.style.display = "none";
+return;
+}
+
+fetch(`/search-products/?q=${query}`)
+.then(res => res.json())
+.then(data => {
+
+resultsBox.innerHTML = "";
+
+if(data.length === 0){
+resultsBox.innerHTML = "<div class='search-item'>No products found</div>";
+resultsBox.style.display = "block";
+return;
+}
+
+data.forEach(product => {
+
+let item = document.createElement("div");
+
+item.classList.add("search-item");
+
+item.innerHTML = `
+<img src="${product.image}">
+<div>
+<div class="search-name">${product.name}</div>
+<div class="search-price">₹${product.price}</div>
+</div>
+`;
+
+item.onclick = () => {
+window.location.href = `/product/${product.id}/`;
+};
+
+resultsBox.appendChild(item);
+
+});
+
+resultsBox.style.display = "block";
+
+});
+
+});
+
+</script>
+
+<script>
+
+function scrollLeft(){
+document.getElementById("cakeSlider").scrollBy({
+left:-250,
+behavior:"smooth"
+});
+}
+
+function scrollRight(){
+document.getElementById("cakeSlider").scrollBy({
+left:250,
+behavior:"smooth"
+});
+}
+
+</script>
+
+<script>
+
+function changePrice(price){
+document.querySelector(".price").innerText = "₹" + price;
 }
 
 </script>

@@ -20,7 +20,24 @@
             <div>
                 <h3>{{ item.product.name }}</h3>
                 <p>Price: ₹{{ item.product.price }}</p>
-                <p>Quantity: {{ item.quantity }}</p>
+                <div style="display:flex;align-items:center;gap:10px;">
+                <a href="{% url 'decrease_quantity' item.product.id %}">
+                <button class="qty-btn minus">-</button>
+                </a>
+
+                <span class="qty-number">{{ item.quantity }}</span>
+
+                <a href="{% url 'increase_quantity' item.product.id %}">
+                <button class="qty-btn plus">+</button>
+                </a>
+
+                <a href="{% url 'remove_from_cart' item.product.id %}">
+                <button class="remove-btn">
+                🗑 Remove
+                </button>
+                </a>
+
+</div>
                 <p>Subtotal: ₹{{ item.subtotal }}</p>
             </div>
 
@@ -36,9 +53,9 @@
         <p><strong>Total: ₹{{ total }}</strong></p>
 
         <a href="{% url 'checkout' %}">
-            <button style="width:100%; padding:10px; background:brown; color:white; border:none;">
-                Proceed to Checkout
-            </button>
+        <button class="checkout-btn">
+        Proceed to Checkout →
+        </button>
         </a>
     </div>
 

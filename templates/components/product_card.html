@@ -1,22 +1,23 @@
-<div class="item">
+<div class="product-card">
 
 <a href="{% url 'product_detail' product.id %}">
 
-{% if product.image %}
-<img src="{{ product.image.url }}">
-{% else %}
-<img src="/static/images/no-image.png">
-{% endif %}
+<div class="product-image">
+<img src="{{ product.image.url }}" alt="{{ product.name }}">
+</div>
+
+<h3 class="product-name">{{ product.name }}</h3>
+
+<div class="product-rating">
+⭐ {{ product.average_rating|floatformat:1 }}
+<span>({{ product.review_count }} reviews)</span>
+</div>
+
+<div class="product-price">₹{{ product.price }}</div>
 
 </a>
 
-<h3>{{ product.name }}</h3>
-
-<p class="product-desc">
-{{ product.description|truncatewords:8 }}
-</p>
-
-<a href="{% url 'add_to_cart' product.id %}" onclick="showCartPopup()">
+<a href="{% url 'add_to_cart' product.id %}">
 <button class="order-btn-small">Order Now</button>
 </a>
 

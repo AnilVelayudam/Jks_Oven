@@ -24,7 +24,11 @@ Order Now
 
 <h2 class="section-title">Featured Cakes</h2>
 
-<div class="featured-slider">
+<div class="slider-wrapper">
+
+<button class="slider-btn left" onclick="scrollLeft()">‹</button>
+
+<div class="featured-slider" id="cakeSlider">
 
 {% for product in featured_cakes %}
 
@@ -34,12 +38,16 @@ Order Now
 
 </div>
 
+<button class="slider-btn right" onclick="scrollRight()">›</button>
+
+</div>
+
 
 <h2 style="margin-top:40px;">Our Famous Items</h2>
 
 <div class="items-container">
 
-{% for product in products %}
+{% for product in famous_items %}
 
 {% include "components/product_card.html" %}
 

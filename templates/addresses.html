@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2>Your Addresses</h2>
+
+<div class="address-grid">
+
+<a href="{% url 'add_address' %}" class="add-address-card">
+    + Add Address
+</a>
+
+{% for addr in addresses %}
+
+<div class="address-card">
+
+<b>{{ addr.full_name }}</b><br>
+
+{{ addr.house }}, {{ addr.area }}<br>
+{{ addr.city }} - {{ addr.pincode }}<br>
+{{ addr.state }}<br>
+Phone: {{ addr.phone }}
+
+<div class="address-actions">
+<a href="{% url 'edit_address' addr.id %}">Edit</a>
+<a href="{% url 'delete_address' addr.id %}">Remove</a>
+</div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% endblock %}

@@ -1,3 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="product-page">
+
+<!-- LEFT : Product Image -->
+
+<div class="product-image-box">
+
+<img src="{{ product.image.url }}" alt="{{ product.name }}">
+
+</div>
+
+
+<!-- RIGHT : Product Info -->
+
+<div class="product-info">
+
+<h1>{{ product.name }}</h1>
+
+<div class="rating">
+⭐ {{ product.average_rating|floatformat:1 }}
+({{ reviews|length }} reviews)
+</div>
+
+<h2 class="price">₹{{ product.price }}</h2>
+
+<p class="product-desc">
+{{ product.description }}
+</p>
+
+
+<h3>Select Weight</h3>
+
+<div class="weight-options">
+
+<button onclick="changePrice(499)">500g</button>
+<button onclick="changePrice(899)">1kg</button>
+<button onclick="changePrice(1699)">2kg</button>
+
+</div>
+
+<br>
+
+<a href="{% url 'add_to_cart' product.id %}">
+<button class="buy-btn">Add To Cart</button>
+</a>
+
+</div>
+
+</div>
+
+<hr style="margin:40px 0;">
+
+
 <h2>Customer Reviews</h2>
 
 {% for review in reviews %}
@@ -57,3 +112,5 @@
 <p>Please login to write a review.</p>
 
 {% endif %}
+
+{% endblock %}

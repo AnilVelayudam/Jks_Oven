@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models import Avg
 
 
 class Product(models.Model):
@@ -18,6 +19,13 @@ class Product(models.Model):
     is_offer = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+
+    def average_rating(self):
+        return self.review_set.aggregate(avg=Avg('rating'))['avg'] or 0
+
+    def review_count(self):
+        return self.review_set.count()
+    
     def __str__(self):
         return self.name
 
@@ -48,3 +56,23 @@ class Review(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.product.name}"
+
+
+class Address(models.Model):
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    full_name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=15)
+
+    pincode = models.CharField(max_length=10)
+
+    house = models.CharField(max_length=200)
+    area = models.CharField(max_length=200)
+    landmark = models.CharField(max_length=200, blank=True)
+
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.full_name

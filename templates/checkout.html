@@ -3,11 +3,55 @@
 
 <h1>Checkout</h1>
 
-<h3>Total Amount: ₹{{ total }}</h3>
+<form method="POST">
+{% csrf_token %}
 
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Place Order</button>
+<div class="checkout-container">
+
+<!-- LEFT : Address -->
+<div class="address-section">
+
+<h3>Select Address</h3>
+
+{% for addr in addresses %}
+
+<label class="address-card">
+<input type="radio" name="address_id" value="{{ addr.id }}">
+
+<b>{{ addr.full_name }}</b><br>
+{{ addr.address_line }}<br>
+{{ addr.city }} - {{ addr.pincode }}<br>
+{{ addr.phone }}
+
+</label>
+
+{% empty %}
+
+<p>No address saved</p>
+
+{% endfor %}
+
+<hr>
+<h3>Add New Address</h3>
+
+<a href="{% url 'add_address' %}" class="add-address-btn">
++ Add New Address
+</a>
+<!-- RIGHT : Order Summary -->
+<div class="checkout-summary">
+
+<h3>Order Summary</h3>
+
+<p>Total Amount: ₹{{ total }}</p>
+
+<button type="submit" class="place-order-btn">
+Place Order
+</button>
+
+</div>
+
+</div>
+
 </form>
 
 {% endblock %}

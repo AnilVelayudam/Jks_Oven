@@ -181,6 +181,39 @@ document.querySelector(".price").innerText = "₹" + price;
 }
 
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function(){
+
+    document.querySelectorAll(".add-to-cart-btn").forEach(btn => {
+
+        btn.addEventListener("click", function(){
+
+            let productId = this.dataset.id;
+
+            fetch(`/add-to-cart/${productId}/`)
+            .then(() => {
+
+                // show popup
+                showCartPopup();
+
+                // update cart count
+                let count = document.querySelector(".cart-count");
+
+                if(count.innerText){
+                    count.innerText = parseInt(count.innerText) + 1;
+                } else {
+                    count.innerText = 1;
+                }
+
+            });
+
+        });
+
+    });
+
+});
+</script>
 </body>
 
 <footer class="footer">

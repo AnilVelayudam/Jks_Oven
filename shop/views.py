@@ -1,130 +1,231 @@
-from django.shortcuts import render
-from .models import Product
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.contrib.auth.models import User
+from django.contrib.auth import login
+from decimal import Decimal
 
+from .models import Product, Order, OrderItem, Address, Review
+from .forms import ReviewForm
+
+
+# ================= HOME =================
 def home(request):
-
     featured_cakes = Product.objects.filter(category='cake')[:8]
-
     famous_items = Product.objects.all()
 
     return render(request, 'home.html', {
         'featured_cakes': featured_cakes,
         'famous_items': famous_items
     })
-# def sweet_hub(request):
-#     products = Product.objects.all()
-#     return render(request, 'sweet_hub.html', {'products': products})
 
-from django.shortcuts import redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, get_object_or_404
-from .models import Product
 
+# ================= ADD TO CART =================
 def add_to_cart(request, product_id):
+
     cart = request.session.get('cart', {})
     product = get_object_or_404(Product, id=product_id)
 
-    if str(product_id) in cart:
-        cart[str(product_id)] += 1
+    cream = request.GET.get("cream")
+    weight = request.GET.get("weight")
+
+    # safety check
+    if not cream or not weight:
+        return redirect('product_detail', product_id=product_id)
+
+    # price logic
+    if cream == "whipping":
+        base_price = product.whipping_price
     else:
-        cart[str(product_id)] = 1
+        base_price = product.buttercream_price
+
+    if not base_price:
+        return redirect('product_detail', product_id=product_id)
+
+    weight_decimal = Decimal(weight)
+    final_price = base_price * weight_decimal
+
+    cart_key = f"{product_id}_{cream}_{weight}"
+
+    if cart_key in cart:
+        cart[cart_key]['quantity'] += 1
+    else:
+        cart[cart_key] = {
+            'product_id': product_id,
+            'cream': cream,
+            'weight': weight,
+            'price': float(final_price),
+            'quantity': 1
+        }
 
     request.session['cart'] = cart
+    next_page = request.GET.get("next")
 
-    return redirect(request.META.get('HTTP_REFERER'))
+    if next_page == "checkout":
+        return redirect('checkout')
 
+    return redirect('cart')
+
+
+# ================= CART VIEW =================
 def cart_view(request):
+
     cart = request.session.get('cart', {})
     cart_items = []
     total = 0
 
-    for product_id, quantity in cart.items():
-        product = Product.objects.get(id=product_id)
-        total += product.price * quantity
+    for key, item in cart.items():
+
+        # ✅ skip old invalid cart data
+        if not isinstance(item, dict):
+            continue
+
+        product = Product.objects.filter(id=item['product_id']).first()
+
+        if not product:
+            continue
+
+        subtotal = item['price'] * item['quantity']
+        total += subtotal
 
         cart_items.append({
+            'key': key,
             'product': product,
-            'quantity': quantity,
-            'subtotal': product.price * quantity
+            'quantity': item['quantity'],
+            'subtotal': subtotal,
+            'cream': item['cream'],
+            'weight': item['weight'],
+            'price': item['price']
         })
 
     return render(request, 'cart.html', {
         'cart_items': cart_items,
         'total': total
     })
-from django.contrib.auth.decorators import login_required
-from .models import Order
 
-from .models import Order, OrderItem
 
-from .models import Address
+# ================= QUANTITY =================
+def increase_quantity(request, key):
+    cart = request.session.get('cart', {})
 
+    if key in cart:
+        cart[key]['quantity'] += 1
+
+    request.session['cart'] = cart
+    return redirect('cart')
+
+
+def decrease_quantity(request, key):
+    cart = request.session.get('cart', {})
+
+    if key in cart:
+        cart[key]['quantity'] -= 1
+
+        if cart[key]['quantity'] <= 0:
+            del cart[key]
+
+    request.session['cart'] = cart
+    return redirect('cart')
+
+
+def remove_from_cart(request, key):
+    cart = request.session.get('cart', {})
+
+    if key in cart:
+        del cart[key]
+
+    request.session['cart'] = cart
+    return redirect('cart')
+
+
+# ================= CHECKOUT =================
 @login_required
 def checkout(request):
 
-    cart = request.session.get('cart', {})
+    buy_now = request.session.get('buy_now')
+    cart_items = []
     total = 0
 
-    for product_id, quantity in cart.items():
-        product = Product.objects.get(id=product_id)
-        total += product.price * quantity
+    # 🔥 BUY NOW FLOW
+    if buy_now:
+
+        product = Product.objects.filter(id=buy_now['product_id']).first()
+
+        if product:
+            subtotal = buy_now['price'] * buy_now['quantity']
+            total += subtotal
+
+            cart_items.append({
+                'product': product,
+                'quantity': buy_now['quantity'],
+                'price': buy_now['price'],
+                'cream': buy_now['cream'],
+                'weight': buy_now['weight']
+            })
+
+    # 🛒 NORMAL CART FLOW
+    else:
+
+        cart = request.session.get('cart', {})
+
+        for key, item in cart.items():
+
+            if not isinstance(item, dict):
+                continue
+
+            product = Product.objects.filter(id=item['product_id']).first()
+
+            if not product:
+                continue
+
+            subtotal = item['price'] * item['quantity']
+            total += subtotal
+
+            cart_items.append({
+                'product': product,
+                'quantity': item['quantity'],
+                'price': item['price'],
+                'cream': item['cream'],
+                'weight': item['weight']
+            })
 
     addresses = Address.objects.filter(user=request.user)
 
     if request.method == "POST":
 
-        # save new address
-        full_name = request.POST.get("full_name")
-        phone = request.POST.get("phone")
-        address_line = request.POST.get("address_line")
-        city = request.POST.get("city")
-        state = request.POST.get("state")
-        pincode = request.POST.get("pincode")
-
-        if full_name:
-            Address.objects.create(
-                user=request.user,
-                full_name=full_name,
-                phone=phone,
-                address_line=address_line,
-                city=city,
-                state=state,
-                pincode=pincode
-            )
-
         order = Order.objects.create(
             user=request.user,
             total_amount=total
         )
-        for product_id, quantity in cart.items():
-            product = Product.objects.get(id=product_id)
+
+        for item in cart_items:
             OrderItem.objects.create(
                 order=order,
-                product=product,
-                quantity=quantity,
-                price=product.price
+                product=item['product'],
+                quantity=item['quantity'],
+                price=item['price']
             )
 
-        request.session['cart'] = {}
-
+        if buy_now:
+            request.session.pop('buy_now', None)  # ✅ IMPORTANT
+        else:
+            request.session[cart]={}
         return redirect("order_success")
 
     return render(request, "checkout.html", {
         "total": total,
-        "addresses": addresses
+        "addresses": addresses,
+        "cart_items": cart_items
     })
 
-from django.contrib.auth.decorators import login_required
-
+# ================= PROFILE =================
 @login_required
 def profile(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'profile.html', {'orders': orders})
 
-from django.contrib.auth.models import User
-from django.contrib.auth import login
-from django.shortcuts import render, redirect
 
+# ================= REGISTER =================
 def register(request):
     if request.method == "POST":
         username = request.POST['username']
@@ -142,17 +243,26 @@ def register(request):
 
     return render(request, 'register.html')
 
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Product, Review
-from .forms import ReviewForm
 
-# review 
+# ================= PRODUCT DETAIL =================
+def product_detail(request, product_id):
+
+    product = get_object_or_404(Product, id=product_id)
+    reviews = Review.objects.filter(product=product)
+
+    return render(request, "product_detail.html", {
+        "product": product,
+        "reviews": reviews
+    })
+
+
+# ================= ADD REVIEW =================
+@login_required
 def add_review(request, product_id):
 
     product = get_object_or_404(Product, id=product_id)
 
     if request.method == "POST":
-
         form = ReviewForm(request.POST)
 
         if form.is_valid():
@@ -163,20 +273,8 @@ def add_review(request, product_id):
 
     return redirect('product_detail', product_id=product.id)
 
-from django.shortcuts import render, get_object_or_404
-from .models import Product, Review
 
-def product_detail(request, product_id):
-
-    product = get_object_or_404(Product, id=product_id)
-
-    reviews = Review.objects.filter(product=product)
-
-    return render(request, "product_detail.html", {
-        "product": product,
-        "reviews": reviews
-    })
-
+# ================= SWEET HUB =================
 def sweet_hub(request):
 
     query = request.GET.get('q')
@@ -189,6 +287,9 @@ def sweet_hub(request):
     return render(request, 'sweet_hub.html', {
         'products': products
     })
+
+
+# ================= CATEGORY =================
 def category_products(request, category):
 
     products = Product.objects.filter(category=category)
@@ -199,15 +300,10 @@ def category_products(request, category):
     })
 
 
-#Search functionality
-
-from django.http import JsonResponse
-from .models import Product
-
+# ================= SEARCH =================
 def search_products(request):
 
     query = request.GET.get('q')
-
     results = []
 
     if query:
@@ -217,64 +313,23 @@ def search_products(request):
             results.append({
                 "id": product.id,
                 "name": product.name,
-                "price": str(product.price),
+                "price": str(product.whipping_price),
                 "image": product.image.url if product.image else ""
             })
 
     return JsonResponse(results, safe=False)
 
 
-def increase_quantity(request, product_id):
-
-    cart = request.session.get('cart', {})
-
-    if str(product_id) in cart:
-        cart[str(product_id)] += 1
-
-    request.session['cart'] = cart
-
-    return redirect('cart')
-
-
-def decrease_quantity(request, product_id):
-
-    cart = request.session.get('cart', {})
-
-    if str(product_id) in cart:
-
-        cart[str(product_id)] -= 1
-
-        if cart[str(product_id)] <= 0:
-            del cart[str(product_id)]
-
-    request.session['cart'] = cart
-
-    return redirect('cart')
-
-
-def remove_from_cart(request, product_id):
-
-    cart = request.session.get('cart', {})
-
-    if str(product_id) in cart:
-        del cart[str(product_id)]
-
-    request.session['cart'] = cart
-
-    return redirect('cart')
-
-
+# ================= ORDER SUCCESS =================
 def order_success(request):
     return render(request, 'order_success.html')
 
 
-from django.shortcuts import render, redirect
-from .models import Address
-
+# ================= ADDRESS =================
+@login_required
 def add_address(request):
 
     if request.method == "POST":
-
         Address.objects.create(
             user=request.user,
             full_name=request.POST.get("full_name"),
@@ -291,10 +346,68 @@ def add_address(request):
 
     return render(request, "add_address.html")
 
+
+@login_required
 def addresses(request):
 
     addresses = Address.objects.filter(user=request.user)
 
-    return render(request,"addresses.html",{
-        "addresses":addresses
+    return render(request, "addresses.html", {
+        "addresses": addresses
     })
+
+
+
+# ================= buy now =================
+
+@login_required
+def buy_now(request, product_id):
+
+    product = get_object_or_404(Product, id=product_id)
+
+    cream = request.GET.get("cream")
+    weight = request.GET.get("weight")
+
+    if not cream or not weight:
+        return redirect('product_detail', product_id=product_id)
+
+    from decimal import Decimal
+
+    if cream == "whipping":
+        base_price = product.whipping_price
+    else:
+        base_price = product.buttercream_price
+
+    if not base_price:
+        return redirect('product_detail', product_id=product_id)
+
+    weight_decimal = Decimal(weight)
+    final_price = base_price * weight_decimal
+
+    # 🔥 store single product (temporary session)
+    request.session['buy_now'] = {
+        'product_id': product.id,
+        'cream': cream,
+        'weight': weight,
+        'price': float(final_price),
+        'quantity': 1
+    }
+
+    return redirect('checkout')
+
+
+# =================  nbuy_now_from_cart =================
+@login_required
+def buy_now_from_cart(request, key):
+
+    cart = request.session.get('cart', {})
+
+    item = cart.get(key)
+
+    if not item:
+        return redirect('cart')
+
+    # 🔥 move this item to buy_now
+    request.session['buy_now'] = item
+
+    return redirect('checkout')

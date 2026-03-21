@@ -122,15 +122,13 @@ DATABASES = {
         'USER': 'postgres',
         'PASSWORD': 'anil@123',
         'HOST': 'localhost',
-        'PORT': '5433',
+        'PORT': '5432',
     }
 }
-
 LOGIN_URL = '/login/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
     BASE_DIR / "static",

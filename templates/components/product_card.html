@@ -3,7 +3,11 @@
 <a href="{% url 'product_detail' product.id %}">
 
 <div class="product-image">
+{% if product.image %}
 <img src="{{ product.image.url }}" alt="{{ product.name }}">
+{% else %}
+<img src="/static/images/default.png" alt="No Image">
+{% endif %}
 </div>
 
 <h3 class="product-name">{{ product.name }}</h3>
@@ -13,12 +17,16 @@
 <span>({{ product.review_count }} reviews)</span>
 </div>
 
-<div class="product-price">₹{{ product.price }}</div>
+<div class="product-price">₹{{ product.whipping_price }}</div>
 
 </a>
 
 <a href="{% url 'add_to_cart' product.id %}">
-<button class="order-btn-small">Order Now</button>
+<button 
+class="order-btn-small add-to-cart-btn" 
+data-id="{{ product.id }}">
+Order Now
+</button>
 </a>
 
 </div>

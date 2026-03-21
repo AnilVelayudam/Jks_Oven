@@ -4,59 +4,85 @@
 <div class="product-page">
 
 <!-- LEFT : Product Image -->
-
 <div class="product-image-box">
-
-<img src="{{ product.image.url }}" alt="{{ product.name }}">
-
+    <img src="{{ product.image.url }}" alt="{{ product.name }}">
 </div>
-
 
 <!-- RIGHT : Product Info -->
-
 <div class="product-info">
 
-<h1>{{ product.name }}</h1>
+    <h1>{{ product.name }}</h1>
 
-<div class="rating">
-⭐ {{ product.average_rating|floatformat:1 }}
-({{ reviews|length }} reviews)
-</div>
+    <div class="rating">
+        ⭐ {{ product.average_rating|floatformat:1 }}
+        ({{ reviews|length }} reviews)
+    </div>
 
-<h2 class="price">₹{{ product.price }}</h2>
+    <p class="product-desc">
+        {{ product.description }}
+    </p>
 
-<p class="product-desc">
-{{ product.description }}
-</p>
+    <!-- ✅ Cream Selection -->
+    <h3>Select Cream</h3>
 
+    <div class="cream-options">
 
-<h3>Select Weight</h3>
+        <label>
+            <input type="radio" name="cream" value="whipping" checked>
+            <span>Whipping Cream</span>
+        </label>
 
-<div class="weight-options">
+        {% if product.buttercream_price %}
+        <label>
+            <input type="radio" name="cream" value="butter">
+            <span>Buttercream</span>
+        </label>
+        {% endif %}
 
-<button onclick="changePrice(499)">500g</button>
-<button onclick="changePrice(899)">1kg</button>
-<button onclick="changePrice(1699)">2kg</button>
+    </div>
 
-</div>
+    <!-- ✅ Weight Selection -->
+    <h3>Select Weight</h3>
 
-<br>
+    <div class="weight-options">
 
-<a href="{% url 'add_to_cart' product.id %}">
-<button class="buy-btn">Add To Cart</button>
-</a>
+        <label>
+            <input type="radio" name="weight" value="0.5" checked>
+            <span>500g</span>
+        </label>
 
+        <label>
+            <input type="radio" name="weight" value="1">
+            <span>1kg</span>
+        </label>
+
+        <label>
+            <input type="radio" name="weight" value="2">
+            <span>2kg</span>
+        </label>
+
+    </div>
+
+    <!-- ✅ Dynamic Price -->
+    <h2 class="price" id="price"></h2>
+
+    <br>
+
+    <!-- ✅ Add To Cart -->
+    <button class="buy-btn" onclick="addToCart()">Add To Cart</button>
+    <button class="buy-btn" style="background:#28a745;" onclick="orderNow()">
+    Order Now
+</button>
 </div>
 
 </div>
 
 <hr style="margin:40px 0;">
 
-
+<!-- Reviews -->
 <h2>Customer Reviews</h2>
 
 {% for review in reviews %}
-
 <div class="review-card">
 
     <strong>{{ review.user.username }}</strong>
@@ -73,44 +99,116 @@
     <p>{{ review.comment }}</p>
 
 </div>
-
 {% empty %}
-
 <p>No reviews yet</p>
-
 {% endfor %}
 
-
+<!-- Add Review -->
 {% if user.is_authenticated %}
 
 <h3>Write a Review</h3>
 
 <form method="POST" action="{% url 'add_review' product.id %}">
-{% csrf_token %}
+    {% csrf_token %}
 
-<label>Rating</label>
-<select name="rating">
-<option value="5">⭐⭐⭐⭐⭐</option>
-<option value="4">⭐⭐⭐⭐</option>
-<option value="3">⭐⭐⭐</option>
-<option value="2">⭐⭐</option>
-<option value="1">⭐</option>
-</select>
+    <label>Rating</label>
+    <select name="rating">
+        <option value="5">⭐⭐⭐⭐⭐</option>
+        <option value="4">⭐⭐⭐⭐</option>
+        <option value="3">⭐⭐⭐</option>
+        <option value="2">⭐⭐</option>
+        <option value="1">⭐</option>
+    </select>
 
-<br><br>
+    <br><br>
 
-<textarea name="comment" placeholder="Write your review"></textarea>
+    <textarea name="comment" placeholder="Write your review"></textarea>
 
-<br><br>
+    <br><br>
 
-<button type="submit">Submit Review</button>
+    <button type="submit">Submit Review</button>
 
 </form>
 
 {% else %}
-
 <p>Please login to write a review.</p>
-
 {% endif %}
+
+<!-- ✅ Dynamic Price Script -->
+<script>
+
+const basePrices = {
+    whipping: {{ product.whipping_price }},
+    butter: {{ product.buttercream_price|default:"null" }}
+};
+
+function updatePrice(){
+
+    let cream = document.querySelector('input[name="cream"]:checked').value;
+    let weight = parseFloat(document.querySelector('input[name="weight"]:checked').value);
+
+    let basePrice = basePrices[cream];
+
+    if(basePrice === null){
+        document.getElementById("price").innerText = "Not Available";
+        return;
+    }
+
+    let finalPrice = basePrice * weight;
+
+    document.getElementById("price").innerText = "₹" + finalPrice;
+}
+
+// ✅ Run on page load
+updatePrice();
+
+// ✅ Update on change
+document.querySelectorAll('input[name="cream"], input[name="weight"]').forEach(el => {
+    el.addEventListener("change", updatePrice);
+});
+
+</script>
+
+<!-- ✅ Add To Cart Script -->
+<script>
+
+function addToCart(){
+
+    let cream = document.querySelector('input[name="cream"]:checked');
+    let weight = document.querySelector('input[name="weight"]:checked');
+
+    if(!cream || !weight){
+        alert("Please select options");
+        return;
+    }
+
+    let creamValue = cream.value;
+    let weightValue = weight.value;
+
+    window.location.href = `/add-to-cart/{{ product.id }}/?cream=${creamValue}&weight=${weightValue}`;
+}
+
+</script>
+
+<script>
+
+function orderNow(){
+
+    let cream = document.querySelector('input[name="cream"]:checked');
+    let weight = document.querySelector('input[name="weight"]:checked');
+
+    if(!cream || !weight){
+        alert("Please select options");
+        return;
+    }
+
+    let creamValue = cream.value;
+    let weightValue = weight.value;
+
+    // 🔥 go to direct checkout (not cart)
+    window.location.href = `/buy-now/{{ product.id }}/?cream=${creamValue}&weight=${weightValue}`;
+}
+
+</script>
 
 {% endblock %}

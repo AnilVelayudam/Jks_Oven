@@ -8,47 +8,47 @@
 
 <div class="checkout-container">
 
-<!-- LEFT : Address -->
-<div class="address-section">
+    <!-- LEFT : Address -->
+    <div class="address-section">
 
-<h3>Select Address</h3>
+        <h3>Select Address</h3>
 
-{% for addr in addresses %}
+        {% for addr in addresses %}
 
-<label class="address-card">
-<input type="radio" name="address_id" value="{{ addr.id }}">
+        <label class="address-card">
+            <input type="radio" name="address_id" value="{{ addr.id }}">
 
-<b>{{ addr.full_name }}</b><br>
-{{ addr.address_line }}<br>
-{{ addr.city }} - {{ addr.pincode }}<br>
-{{ addr.phone }}
+            <b>{{ addr.full_name }}</b><br>
+            {{ addr.house }}, {{ addr.area }}<br>
+            {{ addr.city }} - {{ addr.pincode }}<br>
+            {{ addr.state }}<br>
+            Phone: {{ addr.phone }}
+        </label>
 
-</label>
+        {% empty %}
+        <p>No address saved</p>
+        {% endfor %}
 
-{% empty %}
+        <hr>
 
-<p>No address saved</p>
+        <a href="{% url 'add_address' %}" class="add-address-btn">
+            + Add New Address
+        </a>
 
-{% endfor %}
+    </div>
 
-<hr>
-<h3>Add New Address</h3>
+    <!-- RIGHT : Order Summary -->
+    <div class="checkout-summary">
 
-<a href="{% url 'add_address' %}" class="add-address-btn">
-+ Add New Address
-</a>
-<!-- RIGHT : Order Summary -->
-<div class="checkout-summary">
+        <h3>Order Summary</h3>
 
-<h3>Order Summary</h3>
+        <p>Total Amount: ₹{{ total }}</p>
 
-<p>Total Amount: ₹{{ total }}</p>
+        <button type="submit" class="place-order-btn">
+            Place Order
+        </button>
 
-<button type="submit" class="place-order-btn">
-Place Order
-</button>
-
-</div>
+    </div>
 
 </div>
 

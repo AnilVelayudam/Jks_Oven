@@ -21,8 +21,15 @@
 Phone: {{ addr.phone }}
 
 <div class="address-actions">
-<a href="{% url 'edit_address' addr.id %}">Edit</a>
-<a href="{% url 'delete_address' addr.id %}">Remove</a>
+
+<b>{{ addr.full_name }}</b><br>
+
+{{ addr.house }}, {{ addr.area }}<br>
+{{ addr.city }} - {{ addr.pincode }}<br>
+{{ addr.state }}<br>
+Phone: {{ addr.phone }}
+
+</div>
 </div>
 
 </div>

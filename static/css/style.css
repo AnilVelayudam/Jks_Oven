@@ -1209,3 +1209,140 @@ border-radius:10px;
 box-shadow:0 4px 10px rgba(0,0,0,0.1);
 height:fit-content;
 }
+
+.cream-options label,
+.weight-options label {
+display:inline-block;
+margin-right:10px;
+cursor:pointer;
+}
+
+.cream-options input,
+.weight-options input {
+display:none;
+}
+
+.cream-options span,
+.weight-options span {
+padding:8px 16px;
+border:1px solid #ccc;
+border-radius:6px;
+background:#fff;
+transition:0.2s;
+}
+
+.cream-options input:checked + span,
+.weight-options input:checked + span {
+background:#ff7a00;
+color:white;
+border-color:#ff7a00;
+}
+
+.product-container {
+    display: flex;
+    justify-content: center;
+    padding: 40px;
+}
+
+.product-card {
+    display: flex;
+    gap: 40px;
+    background: #fff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    max-width: 1000px;
+    width: 100%;
+}
+
+.product-image-box img {
+    width: 350px;
+    border-radius: 10px;
+}
+
+.product-info {
+    flex: 1;
+}
+
+.product-info h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.rating {
+    color: #777;
+    margin-bottom: 15px;
+}
+
+.product-desc {
+    color: #555;
+    margin-bottom: 20px;
+}
+
+/* OPTIONS */
+.option-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.option-group input {
+    display: none;
+}
+
+.option-group span {
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+/* SELECTED STYLE */
+.option-group input:checked + span {
+    background: #ff3b3b;
+    color: #fff;
+    border-color: #ff3b3b;
+}
+
+/* PRICE */
+.price {
+    font-size: 24px;
+    font-weight: bold;
+    color: #e53935;
+    margin-bottom: 20px;
+}
+
+/* BUTTONS */
+.btn-group {
+    display: flex;
+    gap: 15px;
+}
+
+.add-btn {
+    background: #ff3b3b;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.order-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.add-btn:hover {
+    background: #d32f2f;
+}
+
+.order-btn:hover {
+    background: #218838;
+}
+
+

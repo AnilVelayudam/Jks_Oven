@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1>Add New Address</h1>
+
+<form method="POST">
+{% csrf_token %}
+
+<div class="address-form">
+
+<input type="text" name="full_name" placeholder="Full Name" required>
+
+<input type="text" name="phone" placeholder="Mobile Number" required>
+
+<input type="text" name="pincode" placeholder="Pincode">
+
+<input type="text" name="house" placeholder="Flat / House No">
+
+<input type="text" name="area" placeholder="Area / Street">
+
+<input type="text" name="landmark" placeholder="Landmark">
+
+<input type="text" name="city" placeholder="City">
+
+<input type="text" name="state" placeholder="State">
+
+<button type="submit" class="place-order-btn">
+Save Address
+</button>
+
+</div>
+
+</form>
+
+{% endblock %}

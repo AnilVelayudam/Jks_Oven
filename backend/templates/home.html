@@ -2,57 +2,29 @@
 {% block content %}
 {% load static %}
 
+<!-- HERO -->
 <section class="hero">
+    <div class="hero-content">
+        <h1>Fresh Cakes<br>Made With Love</h1>
 
-<div class="hero-content">
+        <p>
+            Delicious homemade cakes, cookies, and sweets
+            delivered to your doorstep!
+        </p>
 
-<h1>Fresh Cakes<br>Made With Love</h1>
-
-<p>
-Delicious homemade cakes, cookies, and sweets
-delivered to your doorstep!
-</p>
-
-<a href="{% url 'sweet_hub' %}" class="order-btn">
-Order Now
-</a>
-
-</div>
-
+        <a href="{% url 'sweet_hub' %}" class="order-btn">
+            Order Now
+        </a>
+    </div>
 </section>
 
+<!-- MAIN PRODUCTS -->
+<h2 class="section-title">Our Cakes</h2>
 
-<h2 class="section-title">Featured Cakes</h2>
-
-<div class="slider-wrapper">
-
-<button class="slider-btn left" onclick="scrollLeft()">‹</button>
-
-<div class="featured-slider" id="cakeSlider">
-
-{% for product in featured_cakes %}
-
-{% include "components/product_card.html" %}
-
-{% endfor %}
-
-</div>
-
-<button class="slider-btn right" onclick="scrollRight()">›</button>
-
-</div>
-
-
-<h2 style="margin-top:40px;">Our Famous Items</h2>
-
-<div class="items-container">
-
-{% for product in famous_items %}
-
-{% include "components/product_card.html" %}
-
-{% endfor %}
-
+<div class="product-grid">
+    {% for product in famous_items %}
+        {% include "components/product_card.html" %}
+    {% endfor %}
 </div>
 
 {% endblock %}

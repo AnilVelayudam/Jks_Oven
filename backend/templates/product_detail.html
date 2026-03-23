@@ -5,13 +5,28 @@
 
 <!-- LEFT : Product Image -->
 <div class="product-image-box">
-    <img src="{{ product.image.url }}" alt="{{ product.name }}">
+
+    <img id="mainImage" src="{{ product.image.url }}" alt="{{ product.name }}">
+
+    <div class="thumbnail-container">
+        <img src="{{ product.image.url }}" onclick="changeImage(this)">
+
+        {% for img in product.images.all %}
+            <img src="{{ img.image.url }}" onclick="changeImage(this)">
+        {% endfor %}
+    </div>
+
 </div>
 
 <!-- RIGHT : Product Info -->
 <div class="product-info">
 
     <h1>{{ product.name }}</h1>
+    {% if product.category == 'cake' and product.cake_type %}
+    <p class="cake-badge cake-{{ product.cake_type }}">
+        {{ product.get_cake_type_display }}
+    </p>
+    {% endif %}
 
     <div class="rating">
         ⭐ {{ product.average_rating|floatformat:1 }}
@@ -22,11 +37,8 @@
         {{ product.description }}
     </p>
 
-    <!-- ✅ Cream Selection -->
     <h3>Select Cream</h3>
-
     <div class="cream-options">
-
         <label>
             <input type="radio" name="cream" value="whipping" checked>
             <span>Whipping Cream</span>
@@ -38,112 +50,103 @@
             <span>Buttercream</span>
         </label>
         {% endif %}
-
     </div>
 
-    <!-- ✅ Weight Selection -->
     <h3>Select Weight</h3>
-
     <div class="weight-options">
-
-        <label>
-            <input type="radio" name="weight" value="0.5" checked>
-            <span>500g</span>
-        </label>
-
-        <label>
-            <input type="radio" name="weight" value="1">
-            <span>1kg</span>
-        </label>
-
-        <label>
-            <input type="radio" name="weight" value="2">
-            <span>2kg</span>
-        </label>
-
+        <label><input type="radio" name="weight" value="0.5" checked><span>500g</span></label>
+        <label><input type="radio" name="weight" value="1"><span>1kg</span></label>
+        <label><input type="radio" name="weight" value="2"><span>2kg</span></label>
     </div>
 
-    <!-- ✅ Dynamic Price -->
     <h2 class="price" id="price"></h2>
 
     <br>
 
-    <!-- ✅ Add To Cart -->
-    <button class="buy-btn" onclick="addToCart()">Add To Cart</button>
-    <button class="buy-btn" style="background:#28a745;" onclick="orderNow()">
-    Order Now
-</button>
-</div>
+    <button class="buy-btn primary" onclick="addToCart()">Add To Cart</button>
+    <button class="buy-btn secondary" onclick="orderNow()">Order Now</button>
 
+</div>
 </div>
 
 <hr style="margin:40px 0;">
 
-<!-- Reviews -->
-<h2>Customer Reviews</h2>
+<!-- ⭐ REVIEWS SECTION -->
+<div class="review-section">
 
-{% for review in reviews %}
-<div class="review-card">
+    <h2>Customer Reviews</h2>
 
-    <strong>{{ review.user.username }}</strong>
+    <!-- Reviews List -->
+    <div class="reviews-container">
+        {% for review in reviews %}
+        <div class="review-card">
 
-    <div>
-        Rating:
-        {% for i in "12345" %}
-            {% if forloop.counter <= review.rating %}
-                ⭐
+            <div class="review-header">
+                <strong>{{ review.user.username }}</strong>
+
+                <div class="stars">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= review.rating %}
+                            ⭐
+                        {% else %}
+                            ☆
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <p>{{ review.comment }}</p>
+
+            {% if review.image %}
+                <img src="{{ review.image.url }}" class="review-img">
             {% endif %}
+
+        </div>
+        {% empty %}
+        <p class="no-review">No reviews yet</p>
         {% endfor %}
     </div>
 
-    <p>{{ review.comment }}</p>
+    <!-- Add Review -->
+    {% if user.is_authenticated %}
+    <div class="review-form-box">
+
+        <h3>Write a Review</h3>
+
+        <form method="POST" action="{% url 'add_review' product.id %}" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <select name="rating" class="input-field">
+                <option value="5">⭐⭐⭐⭐⭐</option>
+                <option value="4">⭐⭐⭐⭐</option>
+                <option value="3">⭐⭐⭐</option>
+                <option value="2">⭐⭐</option>
+                <option value="1">⭐</option>
+            </select>
+
+            <textarea name="comment" placeholder="Write your experience..." class="input-field"></textarea>
+
+            <input type="file" name="image" class="input-field">
+
+            <button type="submit" class="submit-btn">Submit Review</button>
+
+        </form>
+
+    </div>
+    {% else %}
+    <p>Please login to write a review.</p>
+    {% endif %}
 
 </div>
-{% empty %}
-<p>No reviews yet</p>
-{% endfor %}
 
-<!-- Add Review -->
-{% if user.is_authenticated %}
-
-<h3>Write a Review</h3>
-
-<form method="POST" action="{% url 'add_review' product.id %}">
-    {% csrf_token %}
-
-    <label>Rating</label>
-    <select name="rating">
-        <option value="5">⭐⭐⭐⭐⭐</option>
-        <option value="4">⭐⭐⭐⭐</option>
-        <option value="3">⭐⭐⭐</option>
-        <option value="2">⭐⭐</option>
-        <option value="1">⭐</option>
-    </select>
-
-    <br><br>
-
-    <textarea name="comment" placeholder="Write your review"></textarea>
-
-    <br><br>
-
-    <button type="submit">Submit Review</button>
-
-</form>
-
-{% else %}
-<p>Please login to write a review.</p>
-{% endif %}
-
-<!-- ✅ Dynamic Price Script -->
+<!-- ✅ PRICE SCRIPT -->
 <script>
-
 const basePrices = {
     whipping: {{ product.whipping_price }},
     butter: {{ product.buttercream_price|default:"null" }}
 };
 
 function updatePrice(){
-
     let cream = document.querySelector('input[name="cream"]:checked').value;
     let weight = parseFloat(document.querySelector('input[name="weight"]:checked').value);
 
@@ -155,60 +158,48 @@ function updatePrice(){
     }
 
     let finalPrice = basePrice * weight;
-
     document.getElementById("price").innerText = "₹" + finalPrice;
 }
 
-// ✅ Run on page load
 updatePrice();
 
-// ✅ Update on change
 document.querySelectorAll('input[name="cream"], input[name="weight"]').forEach(el => {
     el.addEventListener("change", updatePrice);
 });
-
 </script>
 
-<!-- ✅ Add To Cart Script -->
+<!-- ADD TO CART -->
 <script>
-
 function addToCart(){
+    let cream = document.querySelector('input[name="cream"]:checked').value;
+    let weight = document.querySelector('input[name="weight"]:checked').value;
 
-    let cream = document.querySelector('input[name="cream"]:checked');
-    let weight = document.querySelector('input[name="weight"]:checked');
-
-    if(!cream || !weight){
-        alert("Please select options");
-        return;
-    }
-
-    let creamValue = cream.value;
-    let weightValue = weight.value;
-
-    window.location.href = `/add-to-cart/{{ product.id }}/?cream=${creamValue}&weight=${weightValue}`;
+    window.location.href = `/add-to-cart/{{ product.id }}/?cream=${cream}&weight=${weight}`;
 }
-
 </script>
 
+<!-- ORDER NOW -->
 <script>
-
 function orderNow(){
+    let cream = document.querySelector('input[name="cream"]:checked').value;
+    let weight = document.querySelector('input[name="weight"]:checked').value;
 
-    let cream = document.querySelector('input[name="cream"]:checked');
-    let weight = document.querySelector('input[name="weight"]:checked');
-
-    if(!cream || !weight){
-        alert("Please select options");
-        return;
-    }
-
-    let creamValue = cream.value;
-    let weightValue = weight.value;
-
-    // 🔥 go to direct checkout (not cart)
-    window.location.href = `/buy-now/{{ product.id }}/?cream=${creamValue}&weight=${weightValue}`;
+    window.location.href = `/buy-now/{{ product.id }}/?cream=${cream}&weight=${weight}`;
 }
+</script>
 
+<!-- IMAGE SWITCH -->
+<script>
+function changeImage(el){
+    const main = document.getElementById("mainImage");
+    main.src = el.src;
+
+    document.querySelectorAll('.thumbnail-container img').forEach(img => {
+        img.classList.remove('active');
+    });
+
+    el.classList.add('active');
+}
 </script>
 
 {% endblock %}

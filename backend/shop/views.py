@@ -259,20 +259,24 @@ def product_detail(request, product_id):
 # ================= ADD REVIEW =================
 @login_required
 def add_review(request, product_id):
-
-    product = get_object_or_404(Product, id=product_id)
-
     if request.method == "POST":
-        form = ReviewForm(request.POST)
+        product = Product.objects.get(id=product_id)
 
-        if form.is_valid():
-            review = form.save(commit=False)
-            review.user = request.user
-            review.product = product
-            review.save()
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment')
 
-    return redirect('product_detail', product_id=product.id)
+        # 🔥 GET IMAGE
+        image = request.FILES.get('image')
 
+        Review.objects.create(
+            product=product,
+            user=request.user,
+            rating=rating,
+            comment=comment,
+            image=image   # 🔥 SAVE IMAGE
+        )
+
+        return redirect('product_detail', product_id=product_id)
 
 # ================= SWEET HUB =================
 def sweet_hub(request):

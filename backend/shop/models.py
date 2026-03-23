@@ -11,6 +11,19 @@ class Product(models.Model):
         ('sweet', 'Sweet'),
     ]
 
+    CAKE_TYPE_CHOICES = [
+    ('basic', 'Basic Cake'),
+    ('premium', 'Premium Cake'),
+    ('milk', 'Milk Cake / Tres Leches'),
+    ]
+
+    cake_type = models.CharField(
+    max_length=20,
+    choices=CAKE_TYPE_CHOICES,
+    blank=True,
+    null=True
+    )
+
     name = models.CharField(max_length=200)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     whipping_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -21,7 +34,7 @@ class Product(models.Model):
     is_offer = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
-
+    
     def average_rating(self):
         return self.review_set.aggregate(avg=Avg('rating'))['avg'] or 0
 
@@ -49,17 +62,23 @@ class OrderItem(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
 
 
-class Review(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+from django.db import models
+from django.contrib.auth.models import User
 
-    rating = models.PositiveSmallIntegerField()
+class Review(models.Model):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    rating = models.IntegerField()
     comment = models.TextField()
+
+    # 🔥 ADD THIS LINE (important)
+    image = models.ImageField(upload_to='reviews/', blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.user.username} - {self.product.name}"
-
 
 class Address(models.Model):
 
@@ -79,3 +98,12 @@ class Address(models.Model):
 
     def __str__(self):
         return self.full_name
+    
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to='products/')
+
+    def __str__(self):
+        return f"{self.product.name} Image"
+        

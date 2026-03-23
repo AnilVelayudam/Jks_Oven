@@ -1,32 +1,31 @@
 <div class="product-card">
 
-<a href="{% url 'product_detail' product.id %}">
+    <a href="{% url 'product_detail' product.id %}" class="card-link">
 
-<div class="product-image">
-{% if product.image %}
-<img src="{{ product.image.url }}" alt="{{ product.name }}">
-{% else %}
-<img src="/static/images/default.png" alt="No Image">
-{% endif %}
-</div>
+        <div class="product-image">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}">
+            {% else %}
+                <img src="/static/images/default.png" alt="No Image">
+            {% endif %}
+        </div>
 
-<h3 class="product-name">{{ product.name }}</h3>
+        <h3 class="product-name">{{ product.name }}</h3>
 
-<div class="product-rating">
-⭐ {{ product.average_rating|floatformat:1 }}
-<span>({{ product.review_count }} reviews)</span>
-</div>
+        <div class="product-rating">
+            ⭐ {{ product.average_rating|floatformat:1 }}
+            <span>({{ product.review_count }} reviews)</span>
+        </div>
 
-<div class="product-price">₹{{ product.whipping_price }}</div>
+        <div class="product-price">₹{{ product.whipping_price }}</div>
 
-</a>
+    </a>
 
-<a href="{% url 'add_to_cart' product.id %}">
-<button 
-class="order-btn-small add-to-cart-btn" 
-data-id="{{ product.id }}">
-Order Now
-</button>
-</a>
+    <!-- BUTTON OUTSIDE LINK (IMPORTANT) -->
+    <a href="{% url 'add_to_cart' product.id %}" class="btn-wrapper">
+        <button class="order-btn-small add-to-cart-btn">
+            Order Now
+        </button>
+    </a>
 
 </div>

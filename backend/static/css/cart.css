@@ -1,0 +1,17 @@
+.cart-layout {
+    display: flex;
+    gap: 40px;
+}
+
+.cart-card {
+    display: flex;
+    gap: 20px;
+    background: white;
+    padding: 20px;
+}
+
+.checkout-container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 40px;
+}

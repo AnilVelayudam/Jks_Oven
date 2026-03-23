@@ -1,0 +1,22 @@
+.review-section {
+    max-width: 900px;
+    margin: 40px auto;
+}
+
+.review-card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.review-form-box {
+    background: #fafafa;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.submit-btn {
+    background: #ff4d6d;
+    color: white;
+}

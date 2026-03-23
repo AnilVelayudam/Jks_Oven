@@ -1,0 +1,21 @@
+.product-page {
+    display: flex;
+    gap: 60px;
+    padding: 50px;
+}
+
+.product-image-box img {
+    width: 100%;
+    max-width: 500px;
+    border-radius: 12px;
+}
+
+.product-info {
+    max-width: 500px;
+}
+
+.weight-options,
+.cream-options {
+    display: flex;
+    gap: 10px;
+}

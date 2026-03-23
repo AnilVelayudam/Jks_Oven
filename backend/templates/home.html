@@ -1,6 +1,7 @@
 {% extends 'base.html' %}
-{% block content %}
 {% load static %}
+
+{% block fullwidth %}
 
 <!-- HERO -->
 <section class="hero">
@@ -18,7 +19,11 @@
     </div>
 </section>
 
-<!-- MAIN PRODUCTS -->
+{% endblock %}
+
+
+{% block content %}
+
 <h2 class="section-title">Our Cakes</h2>
 
 <div class="product-grid">

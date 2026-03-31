@@ -25,7 +25,11 @@ SECRET_KEY = 'django-insecure-%7^b=0f5*3#r!!0iwletp&n0#bc+qol(*h=va)#9ck4c3hye-p
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "127.0.0.1",
+    "localhost",
+    "jayce-subectodermic-talentedly.ngrok-free.dev"
+]
 
 
 # Application definition
@@ -98,7 +102,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -130,9 +134,28 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR.parent / 'media'
 
 
+
+STATIC_URL = '/static/'
+
 STATICFILES_DIRS = [
-    BASE_DIR / "static",
+    BASE_DIR / "static"
 ]
+
+# ADD THIS 👇 (IMPORTANT)
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 LOGIN_REDIRECT_URL = '/profile/'
 LOGOUT_REDIRECT_URL = '/'
+
+
+
+RAZORPAY_KEY_ID = "rzp_test_SVQp8pVLTEGzRb"
+RAZORPAY_KEY_SECRET = "RUBUBmNkjj1NODczg7bWTZmJ"
+
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+RAZORPAY_WEBHOOK_SECRET = "jksoven123"

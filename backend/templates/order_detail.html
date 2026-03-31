@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="order-detail-wrapper">
+
+    <h1>Order #{{ order.id }}</h1>
+    
+    <p class="order-date">
+        {{ order.created_at|date:"F d, Y, h:i A" }}
+    </p>
+
+    <!-- 🚀 TRACKING UI -->
+    <div class="order-detail-card">
+        <h3>Order Tracking</h3>
+
+        <div class="tracking-bar">
+
+            {% if order.status == "CANCELLED" %}
+                <div class="step cancelled">❌ Cancelled</div>
+            {% else %}
+
+                <div class="step active">✔ Order Placed</div>
+
+                <div class="step {% if order.status == 'PACKED' or order.status == 'OUT_FOR_DELIVERY' or order.status == 'DELIVERED' %}active{% endif %}">
+                    📦 Packed
+                </div>
+
+                <div class="step {% if order.status == 'OUT_FOR_DELIVERY' or order.status == 'DELIVERED' %}active{% endif %}">
+                    🚚 Out for Delivery
+                </div>
+
+                <div class="step {% if order.status == 'DELIVERED' %}active{% endif %}">
+                    🎉 Delivered
+                </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- 💳 PAYMENT INFO -->
+    <div class="order-detail-card">
+        <h3>Payment Details</h3>
+
+        <p>
+            <b>Method:</b> 
+            {% if order.payment_method == "ONLINE" %}
+                💳 Online Payment (Razorpay)
+            {% else %}
+                💵 Cash on Delivery
+            {% endif %}
+        </p>
+
+        <p>
+            <b>Status:</b>
+            {% if order.payment_status == "PAID" %}
+                <span style="color:green;">✔ Paid</span>
+
+            {% elif order.payment_status == "FAILED" %}
+                <span style="color:red;">❌ Failed</span>
+
+            {% elif order.payment_status == "REFUNDED" %}
+                <span style="color:blue;">↩ Refunded</span>
+
+            {% else %}
+                <span style="color:orange;">⏳ Pending</span>
+            {% endif %}
+        </p>
+
+        {% if order.payment_id %}
+        <p><b>Payment ID:</b> {{ order.payment_id }}</p>
+        {% endif %}
+    </div>
+
+    <!-- 🚚 DELIVERY INFO -->
+    <div class="order-detail-card">
+        <h3>Delivery Info</h3>
+
+        <p>
+            <b>Estimated Delivery:</b> 
+            <span class="eta-text">{{ eta_message }}</span>
+        </p>
+
+        <p>
+            <b>Delivery Date:</b>
+            {{ order.estimated_delivery }}
+        </p>
+
+        <!-- ✅ CANCEL BUTTON -->
+        {% if order.status == "PENDING" %}
+        <div id="cancel-section" style="margin-top:15px;">
+
+            {% if can_cancel %}
+                <p id="timer-text" style="color:#ff9800; font-weight:500;"></p>
+
+                <a href="{% url 'cancel_order' order.id %}" id="cancel-btn-link">
+                    <button class="cancel-btn">❌ Cancel Order</button>
+                </a>
+
+            {% else %}
+                <p style="color:gray;">⏱ Cancellation window closed</p>
+            {% endif %}
+
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ADDRESS -->
+    {% if order.address %}
+    <div class="order-detail-card">
+        <h3>Delivery Address</h3>
+        <p>
+            {{ order.address.full_name }}<br>
+            {{ order.address.house }}, {{ order.address.area }}<br>
+            {{ order.address.city }} - {{ order.address.pincode }}<br>
+            {{ order.address.state }}<br>
+            📞 {{ order.address.phone }}
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- ITEMS -->
+    <div class="order-detail-card">
+        <h3>Items</h3>
+
+        {% for item in order.items.all %}
+        <div class="order-item">
+
+            <img src="{{ item.product.image.url }}" class="order-img">
+
+            <div>
+                <p class="product-name">{{ item.product.name }}</p>
+                <p>Qty: {{ item.quantity }}</p>
+                <p>₹{{ item.price }}</p>
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <!-- TOTAL + INVOICE -->
+    <div class="order-footer">
+
+        <h2>Total: ₹{{ order.total_amount }}</h2>
+
+        <a href="{% url 'download_invoice' order.id %}">
+            <button class="invoice-btn">🧾 Download Invoice</button>
+        </a>
+
+    </div>
+
+</div>
+
+<!-- 🔥 AUTO REFRESH -->
+<script>
+
+// Refund animation
+const refundStatus = document.getElementById("refund-status");
+
+if (refundStatus && refundStatus.innerText.includes("Processing")) {
+    setTimeout(() => {
+        refundStatus.innerHTML = "↩ Refunded";
+        refundStatus.style.color = "blue";
+        refundStatus.style.animation = "none";
+    }, 3000);
+}
+
+// Auto refresh only if NOT cancelled
+{% if order.status != "CANCELLED" %}
+setInterval(function(){
+    location.reload();
+}, 5000);
+{% endif %}
+
+</script>
+
+<script>
+
+    // 🔥 Order created time from Django
+    const orderCreated = new Date("{{ order.created_at|date:'Y-m-d H:i:s' }}").getTime();
+
+    // 1 hour = 3600000 ms
+    const cancelLimit = 60 * 60 * 1000;
+
+    const timerText = document.getElementById("timer-text");
+    const cancelBtn = document.getElementById("cancel-btn-link");
+
+    function updateTimer() {
+
+        const now = new Date().getTime();
+        const diff = cancelLimit - (now - orderCreated);
+
+        if (diff <= 0) {
+            timerText.innerHTML = "⏱ Cancellation window closed";
+            cancelBtn.style.display = "none";
+            return;
+        }
+
+        let minutes = Math.floor(diff / (1000 * 60));
+        let seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        // format 2 digits
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+
+        timerText.innerHTML = `⏱ Cancel available for: ${minutes}:${seconds}`;
+    }
+
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+</script>
+
+<script>
+
+const refundStatus = document.getElementById("refund-status");
+
+if (refundStatus && refundStatus.innerText.includes("Processing")) {
+
+    setTimeout(() => {
+        refundStatus.innerHTML = "↩ Refunded";
+        refundStatus.style.color = "blue";
+        refundStatus.style.animation = "none";
+    }, 3000);
+}
+</script>
+
+{% endblock %}

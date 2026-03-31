@@ -1,40 +1,30 @@
 {% extends 'base.html' %}
 {% block content %}
 
+<div class="address-list-wrapper">
+
 <h2>Your Addresses</h2>
 
 <div class="address-grid">
 
-<a href="{% url 'add_address' %}" class="add-address-card">
-    + Add Address
-</a>
+    <a href="{% url 'add_address' %}" class="add-address-card">
+        + Add Address
+    </a>
 
-{% for addr in addresses %}
+    {% for addr in addresses %}
+    <div class="address-card">
 
-<div class="address-card">
+        <b>{{ addr.full_name }}</b>
 
-<b>{{ addr.full_name }}</b><br>
+        <p>{{ addr.house }}, {{ addr.area }}</p>
+        <p>{{ addr.city }} - {{ addr.pincode }}</p>
+        <p>{{ addr.state }}</p>
+        <p>📞 {{ addr.phone }}</p>
 
-{{ addr.house }}, {{ addr.area }}<br>
-{{ addr.city }} - {{ addr.pincode }}<br>
-{{ addr.state }}<br>
-Phone: {{ addr.phone }}
-
-<div class="address-actions">
-
-<b>{{ addr.full_name }}</b><br>
-
-{{ addr.house }}, {{ addr.area }}<br>
-{{ addr.city }} - {{ addr.pincode }}<br>
-{{ addr.state }}<br>
-Phone: {{ addr.phone }}
+    </div>
+    {% endfor %}
 
 </div>
-</div>
-
-</div>
-
-{% endfor %}
 
 </div>
 

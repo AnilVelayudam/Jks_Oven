@@ -94,3 +94,29 @@ count.innerText = 1;
 });
 
 });
+
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const slides = document.querySelectorAll(".hero-slide");
+
+    // SET BACKGROUND IMAGES
+    slides.forEach(slide => {
+        const bg = slide.getAttribute("data-bg");
+        if (bg) {
+            slide.style.backgroundImage = `url(${bg})`;
+        }
+    });
+
+    // SLIDER
+    let index = 0;
+
+    setInterval(() => {
+        slides[index].classList.remove("active");
+
+        index = (index + 1) % slides.length;
+
+        slides[index].classList.add("active");
+    }, 3000);
+
+});

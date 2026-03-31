@@ -1,15 +1,55 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<div style="text-align:center; padding:50px;">
-    <h1>🎉 Order Placed Successfully!</h1>
-    <p>Thank you for ordering from JK's Oven Point.</p>
+<div style="max-width:600px; margin:80px auto; text-align:center; background:#fff; padding:40px; border-radius:12px; box-shadow:0 8px 25px rgba(0,0,0,0.08);">
 
-    <a href="{% url 'home' %}">
-        <button style="padding:10px 20px; background:brown; color:white; border:none;">
-            Continue Shopping
+    <h1 style="color:green;">✅ Order Placed Successfully!</h1>
+
+    <p style="margin-top:10px;">
+        Thank you for your order 🎉
+    </p>
+
+    {% if order %}
+        <div style="margin-top:20px; text-align:left; background:#f9f9f9; padding:15px; border-radius:8px;">
+            <p><strong>Order ID:</strong> #{{ order.id }}</p>
+            <p><strong>Total:</strong> ₹{{ order.total_amount }}</p>
+        </div>
+    {% endif %}
+
+    <br>
+
+    <a href="{% url 'order_detail' order.id %}">
+        <button style="
+            padding:10px 20px;
+            background:#28a745;
+            color:white;
+            border:none;
+            border-radius:6px;
+            cursor:pointer;">
+            View Order Details
         </button>
     </a>
+
+    <br><br>
+
+    <a href="{% url 'profile' %}">
+        <button style="
+            padding:10px 20px;
+            background:#ff4d6d;
+            color:white;
+            border:none;
+            border-radius:6px;
+            cursor:pointer;">
+            Go to My Orders
+        </button>
+    </a>
+
+    <br><br>
+    
+    <a href="{% url 'home' %}">
+        Continue Shopping →
+    </a>
+
 </div>
 
 {% endblock %}

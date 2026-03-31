@@ -5,18 +5,21 @@
 
 <!-- HERO -->
 <section class="hero">
+
+    <div class="hero-slide active" data-bg="{% static 'images/banner.jpg' %}"></div>
+    <div class="hero-slide" data-bg="{% static 'images/banner_1.png' %}"></div>
+    <div class="hero-slide" data-bg="{% static 'images/banner_2.png' %}"></div>
+    <div class="hero-slide" data-bg="{% static 'images/banner_3.png' %}"></div>
+    <div class="hero-slide" data-bg="{% static 'images/banner_4.png' %}"></div>
+    <div class="hero-slide" data-bg="{% static 'images/banner_5.png' %}"></div>
+    <div class="hero-slide" data-bg="{% static 'images/banner_6.png' %}"></div>
+
     <div class="hero-content">
         <h1>Fresh Cakes<br>Made With Love</h1>
-
-        <p>
-            Delicious homemade cakes, cookies, and sweets
-            delivered to your doorstep!
-        </p>
-
-        <a href="{% url 'sweet_hub' %}" class="order-btn">
-            Order Now
-        </a>
+        <p>Delicious homemade cakes, cookies, and sweets delivered to your doorstep!</p>
+        <a href="{% url 'sweet_hub' %}" class="order-btn">Order Now</a>
     </div>
+
 </section>
 
 {% endblock %}

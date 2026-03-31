@@ -1,60 +1,69 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<h1>Your Cart 🛒</h1>
+<h1 class="cart-title">Your Cart 🛒</h1>
 
 {% if cart_items %}
 
-<div style="display:flex; gap:40px; align-items:flex-start;">
+<form method="POST" action="{% url 'checkout' %}">
+{% csrf_token %}
 
-    <!-- Left: Cart Items -->
-    <div style="flex:3;">
+<div class="cart-layout">
+
+    <!-- LEFT -->
+    <div class="cart-items">
+
+        <!-- SELECT ALL -->
+        <div style="margin-bottom:10px;">
+            <input type="checkbox" id="select-all"> <b>Select All</b>
+        </div>
 
         {% for item in cart_items %}
-        <div style="display:flex; gap:20px; border:1px solid #ddd; padding:15px; margin-bottom:20px; background:#fff;">
+        <div class="cart-card">
 
-            <div>
-                <img src="{{ item.product.image.url }}" width="150">
-            </div>
+            <!-- CHECKBOX -->
+            <input 
+                type="checkbox" 
+                class="item-checkbox" 
+                name="selected_items" 
+                value="{{ item.key }}"
+                data-price="{{ item.subtotal }}"
+            >
 
-            <div>
+            <img src="{{ item.product.image.url }}" class="cart-img">
+
+            <div class="cart-info">
                 <h3>{{ item.product.name }}</h3>
 
-                <!-- ✅ Variant Info -->
                 <p><b>Cream:</b> {{ item.cream|title }}</p>
                 <p><b>Weight:</b> {{ item.weight }} kg</p>
 
-                <!-- ✅ Correct price -->
-                <p>Price: ₹{{ item.price }}</p>
+                <p class="price">₹{{ item.price }}</p>
 
-                <!-- ✅ Quantity Controls (FIXED) -->
-                <div style="display:flex; align-items:center; gap:10px;">
+                <div class="qty-box">
 
                     <a href="{% url 'decrease_quantity' item.key %}">
-                        <button class="qty-btn minus">-</button>
+                        <button type="button" class="qty-btn">-</button>
                     </a>
 
                     <span class="qty-number">{{ item.quantity }}</span>
 
                     <a href="{% url 'increase_quantity' item.key %}">
-                        <button class="qty-btn plus">+</button>
+                        <button type="button" class="qty-btn">+</button>
                     </a>
 
                     <a href="{% url 'remove_from_cart' item.key %}">
-                        <button class="remove-btn">
-                            🗑 Remove
-                        </button>
-                        <a href="/buy-now-item/{{ item.key }}/">
-    <button style="background:#28a745; color:white; padding:6px 12px; border:none; border-radius:5px;">
-        ⚡ Order This Item
-    </button>
-</a>
+                        <button type="button" class="remove-btn">Remove</button>
+                    </a>
+
+                    <!-- SINGLE ORDER -->
+                    <a href="/buy-now-item/{{ item.key }}/">
+                        <button type="button" class="order-btn">⚡ Order</button>
                     </a>
 
                 </div>
 
-                <!-- ✅ Subtotal -->
-                <p><b>Subtotal:</b> ₹{{ item.subtotal }}</p>
+                <p class="subtotal">Subtotal: ₹{{ item.subtotal }}</p>
 
             </div>
 
@@ -63,23 +72,74 @@
 
     </div>
 
-    <!-- Right: Summary Box -->
-    <div style="flex:1; border:1px solid #ddd; padding:20px; background:#f9f9f9;">
+    <!-- RIGHT -->
+    <div class="summary-box">
         <h3>Order Summary</h3>
         <hr>
-        <p><strong>Total: ₹{{ total }}</strong></p>
 
-        <a href="{% url 'checkout' %}">
-            <button class="checkout-btn">
-                Proceed to Checkout →
-            </button>
-        </a>
+        <p class="total">
+            Total: ₹<span id="dynamic-total">{{ total }}</span>
+        </p>
+
+        <!-- MAIN BUTTON -->
+        <button type="submit" id="checkout-btn" class="checkout-btn">
+            Proceed Selected Items →
+        </button>
     </div>
 
 </div>
 
+</form>
+
 {% else %}
 <p>Your cart is empty.</p>
 {% endif %}
+
+<!-- 🔥 SCRIPT -->
+<script>
+
+const checkboxes = document.querySelectorAll(".item-checkbox");
+const totalBox = document.getElementById("dynamic-total");
+const checkoutBtn = document.getElementById("checkout-btn");
+const selectAll = document.getElementById("select-all");
+
+// update total
+function updateTotal() {
+    let total = 0;
+    let count = 0;
+
+    checkboxes.forEach(cb => {
+        if (cb.checked) {
+            total += parseFloat(cb.dataset.price);
+            count++;
+        }
+    });
+
+    totalBox.innerText = total.toFixed(2);
+
+    // disable button if nothing selected
+    if (checkoutBtn) {
+        checkoutBtn.disabled = count === 0;
+        checkoutBtn.style.opacity = count === 0 ? "0.5" : "1";
+    }
+}
+
+// individual checkbox change
+checkboxes.forEach(cb => {
+    cb.addEventListener("change", updateTotal);
+});
+
+// select all
+if (selectAll) {
+    selectAll.addEventListener("change", function() {
+        checkboxes.forEach(cb => cb.checked = this.checked);
+        updateTotal();
+    });
+}
+
+// initial load
+updateTotal();
+
+</script>
 
 {% endblock %}

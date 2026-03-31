@@ -1,36 +1,51 @@
 {% extends 'base.html' %}
-
 {% block content %}
+
+<div class="address-wrapper">
+
+<div class="address-box">
 
 <h1>Add New Address</h1>
 
 <form method="POST">
 {% csrf_token %}
 
-<div class="address-form">
+<div class="form-grid">
 
-<input type="text" name="full_name" placeholder="Full Name" required>
+    <input type="text" name="full_name" placeholder="Full Name"
+        value="{{ address.full_name|default:'' }}" required>
 
-<input type="text" name="phone" placeholder="Mobile Number" required>
+    <input type="text" name="phone" placeholder="Phone Number"
+        value="{{ address.phone|default:'' }}" required>
 
-<input type="text" name="pincode" placeholder="Pincode">
+    <input type="text" name="pincode" placeholder="Pincode"
+        value="{{ address.pincode|default:'' }}" required>
 
-<input type="text" name="house" placeholder="Flat / House No">
+    <input type="text" name="house" placeholder="House No / Building"
+        value="{{ address.house|default:'' }}" required>
 
-<input type="text" name="area" placeholder="Area / Street">
+    <input type="text" name="area" placeholder="Area / Street"
+        value="{{ address.area|default:'' }}" required>
 
-<input type="text" name="landmark" placeholder="Landmark">
+    <input type="text" name="landmark" placeholder="Landmark (Optional)"
+        value="{{ address.landmark|default:'' }}">
 
-<input type="text" name="city" placeholder="City">
+    <input type="text" name="city" placeholder="City"
+        value="{{ address.city|default:'' }}" required>
 
-<input type="text" name="state" placeholder="State">
-
-<button type="submit" class="place-order-btn">
-Save Address
-</button>
+    <input type="text" name="state" placeholder="State"
+        value="{{ address.state|default:'' }}" required>
 
 </div>
 
+<button type="submit" class="save-btn">
+    Save Address
+</button>
+
 </form>
+
+</div>
+
+</div>
 
 {% endblock %}

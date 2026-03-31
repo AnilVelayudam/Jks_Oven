@@ -22,5 +22,13 @@ urlpatterns = [
     path("addresses/",views.addresses,name="addresses"),
     path('buy-now/<int:product_id>/', views.buy_now, name='buy_now'),
     path('buy-now-item/<str:key>/', views.buy_now_from_cart, name='buy_now_from_cart'),
+    path('edit-address/<int:id>/', views.edit_address, name='edit_address'),
+    path('delete-address/<int:id>/', views.delete_address, name='delete_address'),
+    path('order/<int:order_id>/', views.order_detail, name='order_detail'),
+    path('payment-success/', views.payment_success, name='payment_success'),
+    path('cancel-order/<int:order_id>/', views.cancel_order, name='cancel_order'),
+    path('invoice/<int:order_id>/', views.download_invoice, name='download_invoice'),
+    path("razorpay-webhook/", views.razorpay_webhook, name="razorpay_webhook"),
+    
 ]
 

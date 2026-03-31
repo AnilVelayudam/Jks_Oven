@@ -1,46 +1,149 @@
 {% extends 'base.html' %}
 {% block content %}
 
-<h1>My Profile 👤</h1>
+<div class="profile-wrapper">
 
-<div style="display:flex; gap:40px;">
+    <h1 class="profile-title">My Profile 👤</h1>
 
-    <!-- Left Panel -->
-    <div style="flex:1; border:1px solid #ddd; padding:20px; background:#f9f9f9;">
-        <h3>User Info</h3>
-        <p><strong>Username:</strong> {{ request.user.username }}</p>
-        <p><strong>Email:</strong> {{ request.user.email }}</p>
-    </div>
+    <div class="profile-layout">
 
-    <!-- Right Panel -->
-    <div style="flex:2;">
-        <h3>My Orders</h3>
+        <!-- LEFT -->
+        <div class="profile-card">
+            <h3>User Info</h3>
 
-        {% for order in orders %}
-        <div style="border:1px solid #ddd; padding:15px; margin-bottom:20px; background:#fff;">
-
-            <h4>Order ID: {{ order.id }}</h4>
-            <p><strong>Date:</strong> {{ order.created_at }}</p>
-            <p><strong>Total:</strong> ₹{{ order.total_amount }}</p>
-
-            <hr>
-
-            {% for item in order.items.all %}
-            <div style="display:flex; gap:15px; margin-bottom:10px;">
-                <img src="{{ item.product.image.url }}" width="80">
-                <div>
-                    <p><strong>{{ item.product.name }}</strong></p>
-                    <p>Quantity: {{ item.quantity }}</p>
-                    <p>Price: ₹{{ item.price }}</p>
-                </div>
+            <div class="user-info">
+                <p><span>Username:</span> {{ request.user.username }}</p>
+                <p><span>Email:</span> {{ request.user.email }}</p>
             </div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="orders-section">
+            <h3>My Orders</h3>
+
+            {% for order in orders %}
+
+            <div class="order-card">
+
+                <!-- CLICKABLE HEADER ONLY -->
+                <a href="{% url 'order_detail' order.id %}" class="order-link">
+
+                    <!-- HEADER -->
+                    <div class="order-header">
+                        <div>
+                            <p><strong>Order #{{ order.id }}</strong></p>
+
+                            <p class="order-date">
+                                {{ order.created_at|date:"F d, Y, h:i A" }}
+                            </p>
+                        </div>
+
+                        <div class="order-total">
+                            ₹{{ order.total_amount }}
+                        </div>
+                    </div>
+
+                </a>
+
+                <!-- PAYMENT + DELIVERY -->
+                <div style="margin:10px 0;">
+
+                    <p>
+                        <b>Payment Method:</b> 
+                        {% if order.payment_method == "ONLINE" %}
+                            💳 Online Payment
+                        {% else %}
+                            💵 Cash on Delivery
+                        {% endif %}
+                    </p>
+
+                    <p>
+                        <b>Payment Status:</b>
+                        {% if order.payment_status == "PAID" %}
+                            <span style="color:green;">✔ Paid</span>
+                        {% elif order.payment_status == "REFUNDED" %}
+                            <span style="color:blue;">↩ Refunded</span>
+                        {% elif order.payment_status == "FAILED" %}
+                            <span style="color:red;">❌ Failed</span>
+                        {% else %}
+                            <span style="color:orange;">⏳ Pending</span>
+                        {% endif %}
+                    </p>
+
+                    <p>
+                        <b>Delivery Status:</b>
+                        <span style="
+                        color:
+                        {% if order.status == 'DELIVERED' %}green
+                        {% elif order.status == 'OUT_FOR_DELIVERY' %}purple
+                        {% elif order.status == 'PACKED' %}blue
+                        {% elif order.status == 'CANCELLED' %}red
+                        {% else %}orange
+                        {% endif %}
+                        ;">
+
+                        {% if order.status == "CANCELLED" %}
+                            ❌ Cancelled
+                        {% else %}
+                            {{ order.status }}
+                        {% endif %}
+
+                        </span>
+                    </p>
+
+                </div>
+
+                <!-- ✅ CANCEL BUTTON
+                {% if order.status == "PENDING" %}
+                <form method="POST" action="{% url 'cancel_order' order.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="cancel-btn">
+                        ❌ Cancel Order
+                    </button>
+                </form>
+                {% endif %} -->
+
+                <!-- ADDRESS -->
+                {% if order.address %}
+                <div class="order-address">
+                    <p><strong>Delivery Address:</strong></p>
+                    <p>
+                        {{ order.address.full_name }}<br>
+                        {{ order.address.house }}, {{ order.address.area }}<br>
+                        {{ order.address.city }} - {{ order.address.pincode }}<br>
+                        {{ order.address.state }}<br>
+                        📞 {{ order.address.phone }}
+                    </p>
+                </div>
+                {% endif %}
+
+                <!-- ITEMS -->
+                <div class="order-items">
+                    {% for item in order.items.all %}
+                    <div class="order-item">
+
+                        <img src="{{ item.product.image.url }}" class="order-img">
+
+                        <div>
+                            <p class="product-name">{{ item.product.name }}</p>
+                            <p class="meta">Qty: {{ item.quantity }}</p>
+                            <p class="meta">₹{{ item.price }}</p>
+                        </div>
+
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+            {% empty %}
+            <p class="empty-orders">No orders yet.</p>
             {% endfor %}
 
         </div>
-        {% empty %}
-        <p>No orders yet.</p>
-        {% endfor %}
+
     </div>
 
 </div>
+
 {% endblock %}

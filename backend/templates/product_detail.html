@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
 
 <div class="product-page">
@@ -52,12 +53,39 @@
         {% endif %}
     </div>
 
-    <h3>Select Weight</h3>
-    <div class="weight-options">
-        <label><input type="radio" name="weight" value="0.5" checked><span>500g</span></label>
-        <label><input type="radio" name="weight" value="1"><span>1kg</span></label>
-        <label><input type="radio" name="weight" value="2"><span>2kg</span></label>
-    </div>
+<h3>Select Weight</h3>
+
+<div class="weight-options">
+
+    <!-- default 1kg -->
+    <label>
+        <input type="radio" name="weight" value="1" checked>
+        <span>1kg</span>
+    </label>
+
+    <label>
+        <input type="radio" name="weight" value="2">
+        <span>2kg</span>
+    </label>
+
+    <label>
+        <input type="radio" name="weight" value="3">
+        <span>3kg</span>
+    </label>
+
+</div>
+
+<!-- CUSTOM KG INPUT -->
+<div style="margin-top:10px;">
+    <input 
+        type="number" 
+        id="customWeight"
+        min="1" 
+        max="20" 
+        placeholder="Enter weight (1–20 kg)"
+        style="padding:8px; width:100%; border-radius:8px;"
+    >
+</div>
 
     <h2 class="price" id="price"></h2>
 
@@ -138,68 +166,15 @@
     {% endif %}
 
 </div>
-
-<!-- ✅ PRICE SCRIPT -->
 <script>
-const basePrices = {
+window.basePrices = {
     whipping: {{ product.whipping_price }},
     butter: {{ product.buttercream_price|default:"null" }}
 };
 
-function updatePrice(){
-    let cream = document.querySelector('input[name="cream"]:checked').value;
-    let weight = parseFloat(document.querySelector('input[name="weight"]:checked').value);
-
-    let basePrice = basePrices[cream];
-
-    if(basePrice === null){
-        document.getElementById("price").innerText = "Not Available";
-        return;
-    }
-
-    let finalPrice = basePrice * weight;
-    document.getElementById("price").innerText = "₹" + finalPrice;
-}
-
-updatePrice();
-
-document.querySelectorAll('input[name="cream"], input[name="weight"]').forEach(el => {
-    el.addEventListener("change", updatePrice);
-});
+window.productId = "{{ product.id }}";
 </script>
 
-<!-- ADD TO CART -->
-<script>
-function addToCart(){
-    let cream = document.querySelector('input[name="cream"]:checked').value;
-    let weight = document.querySelector('input[name="weight"]:checked').value;
-
-    window.location.href = `/add-to-cart/{{ product.id }}/?cream=${cream}&weight=${weight}`;
-}
-</script>
-
-<!-- ORDER NOW -->
-<script>
-function orderNow(){
-    let cream = document.querySelector('input[name="cream"]:checked').value;
-    let weight = document.querySelector('input[name="weight"]:checked').value;
-
-    window.location.href = `/buy-now/{{ product.id }}/?cream=${cream}&weight=${weight}`;
-}
-</script>
-
-<!-- IMAGE SWITCH -->
-<script>
-function changeImage(el){
-    const main = document.getElementById("mainImage");
-    main.src = el.src;
-
-    document.querySelectorAll('.thumbnail-container img').forEach(img => {
-        img.classList.remove('active');
-    });
-
-    el.classList.add('active');
-}
-</script>
+<script src="{% static 'js/product.js' %}"></script>
 
 {% endblock %}

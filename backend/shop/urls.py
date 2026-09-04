@@ -29,6 +29,8 @@ urlpatterns = [
     path('cancel-order/<int:order_id>/', views.cancel_order, name='cancel_order'),
     path('invoice/<int:order_id>/', views.download_invoice, name='download_invoice'),
     path("razorpay-webhook/", views.razorpay_webhook, name="razorpay_webhook"),
-    
+    path("login/", views.login_view, name="login"),
+
+   
 ]
 

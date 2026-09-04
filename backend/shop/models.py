@@ -4,11 +4,21 @@ from django.db.models import Avg
 
 class Product(models.Model):
     CATEGORY_CHOICES = [
-        ('cake', 'Cake'),
-        ('cookie', 'Cookie'),
-        ('icecream', 'Ice Cream'),
-        ('sweet', 'Sweet'),
+    ('cake', 'Cake'),
+    ('cookie', 'Cookie'),
+    ('brownie', 'Brownie'),
+    ('cheesecake', 'Cheese Cake'),
+    ('jarcake', 'Jar Cake'),
+    ('cinnamonroll', 'Cinnamon Roll'),
+    ('donut', 'Donut'),
+    ('bomboloni', 'Bomboloni'),
+    ('tiramisu', 'Tiramisu'),
+    ('cupcakes', 'Cup Cakes'),
+    ('muffins', 'Muffins'),
+    ('tresleches', 'Tres Leches'),
+    ('icecream', 'Ice Cream'),
     ]
+
 
     CAKE_TYPE_CHOICES = [
     ('basic', 'Basic Cake'),
@@ -25,7 +35,13 @@ class Product(models.Model):
 
     name = models.CharField(max_length=200)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
-    whipping_price = models.DecimalField(max_digits=10, decimal_places=2)
+    # ✅ COMMON PRICE (for cookies, sweets etc)
+    price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    cookie_quantity = models.PositiveIntegerField(default=1)
+
+    cookie_pack_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+      # ✅ ONLY FOR CAKES
+    whipping_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     buttercream_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     description = models.TextField()
@@ -41,6 +57,24 @@ class Product(models.Model):
     
     def __str__(self):
         return self.name
+
+class ProductOption(models.Model):
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name="options"
+    )
+
+    option_name = models.CharField(max_length=100)
+
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2
+    )
+
+    def __str__(self):
+        return f"{self.product.name} - {self.option_name} - ₹{self.price}"
 
 class Address(models.Model):
 

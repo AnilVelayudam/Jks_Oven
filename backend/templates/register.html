@@ -1,24 +1,59 @@
 {% extends "base.html" %}
-
 {% block content %}
 
-<h2>Create Account</h2>
+<div class="auth-container">
 
-<form method="post">
-    {% csrf_token %}
+    <div class="auth-box">
+        <h2>Create Account 🚀</h2>
+        <p class="sub-text">Join JK’s Oven</p>
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert-box">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
 
-    <label>Username</label>
-    <input type="text" name="username" required>
+        <form method="post">
+            {% csrf_token %}
 
-    <label>Email</label>
-    <input type="email" name="email" required>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" name="username" value="{{ request.POST.username }}" required>
+            </div>
 
-    <label>Password</label>
-    <input type="password" name="password" required>
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" value="{{ request.POST.email }}" required>
+            </div>
 
-    <button type="submit">Register</button>
-</form>
+            <div class="input-group">
+                <label>Password</label>
+                <div class="password-box">
+                    <input type="password" name="password" id="password" required>
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Confirm Password</label>
+                <input type="password" name="confirm_password" required>
+                
+            </div>
 
-<p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+            <button type="submit" class="auth-btn">Register</button>
+        </form>
+
+        <p class="switch-text">
+            Already have account? <a href="{% url 'login' %}">Login</a>
+        </p>
+    </div>
+
+</div>
+
+<script>
+function togglePassword() {
+    const input = document.getElementById("password");
+    input.type = input.type === "password" ? "text" : "password";
+}
+</script>
 
 {% endblock %}

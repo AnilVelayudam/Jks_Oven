@@ -17,15 +17,23 @@
             <span>({{ product.review_count }} reviews)</span>
         </div>
 
-        <div class="product-price">₹{{ product.whipping_price }}</div>
+        <div class="product-price">
+            {% if product.category == "cake" %}
+                ₹{{ product.whipping_price }}
+            {% elif product.category == "cookie" %}
+                ₹{{ product.cookie_pack_price }}
+            {% else %}
+                ₹{{ product.display_price }}
+            {% endif %}
+        </div>
 
     </a>
 
     <!-- BUTTON OUTSIDE LINK (IMPORTANT) -->
-    <a href="{% url 'add_to_cart' product.id %}" class="btn-wrapper">
-        <button class="order-btn-small add-to-cart-btn">
-            Order Now
-        </button>
-    </a>
+<a href="{% url 'product_detail' product.id %}" class="btn-wrapper">
+    <button class="order-btn-small">
+        Order Now
+    </button>
+</a>
 
 </div>

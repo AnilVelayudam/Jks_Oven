@@ -2,80 +2,477 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-from django.contrib.auth import login
 from decimal import Decimal
 from django.views.decorators.csrf import csrf_exempt
-from .models import Product, Order, OrderItem, Address, Review
+from .models import Product,ProductOption, Order, OrderItem, Address, Review
 from .forms import ReviewForm
 
-from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .models import Address
 from datetime import date, timedelta
-
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from django.http import HttpResponse
 
 from django.core.mail import send_mail
-
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+# ================= HOME =================
 # ================= HOME =================
 def home(request):
-    featured_cakes = Product.objects.filter(category='cake')[:8]
+
+    featured_cakes = Product.objects.filter(
+        category="cake"
+    )[:8]
+
     famous_items = Product.objects.all()
 
-    return render(request, 'home.html', {
-        'featured_cakes': featured_cakes,
-        'famous_items': famous_items
+    # Set display price for every product
+    for product in famous_items:
+
+        if product.category == "cake":
+
+            product.display_price = product.whipping_price
+
+        elif product.category == "cookie":
+
+            product.display_price = product.cookie_pack_price
+
+        elif product.options.exists():
+
+            first_option = product.options.order_by("id").first()
+
+            if first_option:
+                product.display_price = first_option.price
+            else:
+                product.display_price = product.price
+
+        else:
+
+            product.display_price = product.price
+
+    return render(request, "home.html", {
+        "featured_cakes": featured_cakes,
+        "famous_items": famous_items
     })
+#
 
+# ============================================================
+# ADD TO CART
+# ============================================================
 
-# ================= ADD TO CART =================
 def add_to_cart(request, product_id):
 
-    cart = request.session.get('cart', {})
+    cart = request.session.get("cart", {})
     product = get_object_or_404(Product, id=product_id)
 
     cream = request.GET.get("cream")
     weight = request.GET.get("weight")
+    option_id = request.GET.get("option_id")
 
-    # safety check
-    if not cream or not weight:
-        return redirect('product_detail', product_id=product_id)
+    option = None
+    option_name = None
+    final_price = None
+    cart_key = None
 
-    # price logic
-    if cream == "whipping":
-        base_price = product.whipping_price
+    # ============================================================
+    # CAKE
+    # ============================================================
+
+    if product.category == "cake":
+
+        if not cream or not weight:
+            return redirect(
+                "product_detail",
+                product_id=product_id
+            )
+
+        if cream == "whipping":
+            base_price = product.whipping_price
+
+        elif cream == "butter":
+            base_price = product.buttercream_price
+
+        else:
+            return redirect(
+                "product_detail",
+                product_id=product_id
+            )
+
+        if base_price is None:
+            return redirect(
+                "product_detail",
+                product_id=product_id
+            )
+
+        try:
+            weight_decimal = Decimal(str(weight))
+        except (TypeError, ValueError):
+            return redirect(
+                "product_detail",
+                product_id=product_id
+            )
+
+        if weight_decimal <= 0:
+            return redirect(
+                "product_detail",
+                product_id=product_id
+            )
+
+        # Unit price for this cake
+        final_price = Decimal(str(base_price)) * weight_decimal
+
+        # Same cake + cream + weight = same cart item
+        cart_key = (
+            f"{product_id}_cake_{cream}_{weight}"
+        )
+
+    # ============================================================
+    # DYNAMIC PRODUCT OPTIONS
+    #
+    # Example:
+    #
+    # Donut - 1  = ₹10
+    # Donut - 2  = ₹20
+    # Donut - 6  = ₹55
+    #
+    # IMPORTANT:
+    # Option itself decides the UNIT PRICE.
+    # Cart quantity is separate.
+    # ============================================================
+
+    elif option_id:
+
+        try:
+            option = ProductOption.objects.get(
+                id=int(option_id),
+                product=product
+            )
+
+        except (
+            ProductOption.DoesNotExist,
+            ValueError,
+            TypeError
+        ):
+            return redirect(
+                "product_detail",
+                product_id=product_id
+            )
+
+        if option.price is None:
+            return redirect(
+                "product_detail",
+                product_id=product_id
+            )
+
+        option_name = option.option_name
+
+        # IMPORTANT:
+        # This is the UNIT PRICE.
+        #
+        # Example:
+        # Donut option 6 = ₹55
+        #
+        # Quantity 1 -> ₹55
+        # Quantity 2 -> ₹55 each
+        # Quantity 3 -> ₹55 each
+
+        final_price = Decimal(str(option.price))
+
+        # IMPORTANT:
+        # Same option gets the same cart key.
+        #
+        # Donut option 6:
+        # 35_option_3
+        #
+        # Adding it again increases quantity
+        # instead of creating another row.
+
+        cart_key = (
+            f"{product_id}_option_{option.id}"
+        )
+
+    # ============================================================
+    # COOKIE
+    # ============================================================
+
+    elif product.category == "cookie":
+
+        if product.cookie_pack_price is None:
+            return redirect(
+                "product_detail",
+                product_id=product_id
+            )
+
+        # Cookie pack UNIT PRICE
+        final_price = Decimal(
+            str(product.cookie_pack_price)
+        )
+
+        # Same cookie pack = same cart item
+        cart_key = f"{product_id}_cookie"
+
+    # ============================================================
+    # NORMAL PRODUCT
+    # ============================================================
+
     else:
-        base_price = product.buttercream_price
 
-    if not base_price:
-        return redirect('product_detail', product_id=product_id)
+        if product.price is None:
+            return redirect(
+                "product_detail",
+                product_id=product_id
+            )
 
-    weight_decimal = Decimal(weight)
-    final_price = base_price * weight_decimal
+        # Normal product UNIT PRICE
+        final_price = Decimal(
+            str(product.price)
+        )
 
-    cart_key = f"{product_id}_{cream}_{weight}"
+        cart_key = f"{product_id}_simple"
+
+    # ============================================================
+    # EXISTING CART ITEM
+    # ============================================================
 
     if cart_key in cart:
-        cart[cart_key]['quantity'] += 1
+
+        # Only increase quantity.
+        #
+        # DO NOT multiply price here.
+        # DO NOT change price based on quantity.
+
+        old_quantity = int(
+            cart[cart_key].get("quantity", 0)
+        )
+
+        cart[cart_key]["quantity"] = old_quantity + 1
+
+        # Keep UNIT PRICE exactly the same.
+        cart[cart_key]["price"] = float(final_price)
+
+    # ============================================================
+    # NEW CART ITEM
+    # ============================================================
+
     else:
+
         cart[cart_key] = {
-            'product_id': product_id,
-            'cream': cream,
-            'weight': weight,
-            'price': float(final_price),
-            'quantity': 1
+            "product_id": product_id,
+
+            # Cake information
+            "cream": cream,
+            "weight": weight,
+
+            # Product option information
+            "option_id": (
+                option.id
+                if option
+                else None
+            ),
+
+            "option_name": option_name,
+
+            # IMPORTANT:
+            # This is UNIT PRICE only.
+            "price": float(final_price),
+
+            # Start with quantity 1
+            "quantity": 1,
         }
 
-    request.session['cart'] = cart
-    next_page = request.GET.get("next")
+    # ============================================================
+    # SAVE CART
+    # ============================================================
 
-    if next_page == "checkout":
-        return redirect('checkout')
+    request.session["cart"] = cart
+    request.session.modified = True
 
-    return redirect('cart')
+    return redirect("cart")
+
+
+# ============================================================
+# CART VIEW
+# ============================================================
+
+def cart_view(request):
+
+    cart = request.session.get("cart", {})
+
+    cart_items = []
+    total = Decimal("0.00")
+
+    for key, item in cart.items():
+
+        # Ignore invalid session data
+        if not isinstance(item, dict):
+            continue
+
+        product_id = item.get("product_id")
+
+        if not product_id:
+            continue
+
+        product = Product.objects.filter(
+            id=product_id
+        ).first()
+
+        if not product:
+            continue
+
+        # ========================================================
+        # QUANTITY
+        # ========================================================
+
+        try:
+            quantity = int(
+                item.get("quantity", 1)
+            )
+        except (TypeError, ValueError):
+            quantity = 1
+
+        if quantity < 1:
+            quantity = 1
+
+        # ========================================================
+        # UNIT PRICE
+        # ========================================================
+
+        try:
+            price = Decimal(
+                str(item.get("price", 0))
+            )
+        except (TypeError, ValueError):
+            price = Decimal("0.00")
+
+        # ========================================================
+        # SUBTOTAL
+        #
+        # Example:
+        #
+        # Option 6 = ₹55
+        # Quantity = 2
+        #
+        # 55 × 2 = ₹110
+        # ========================================================
+
+        subtotal = price * quantity
+
+        total += subtotal
+
+        # ========================================================
+        # CART ITEM
+        # ========================================================
+
+        cart_items.append({
+            "key": key,
+
+            "product": product,
+
+            # Quantity
+            "quantity": quantity,
+
+            # UNIT PRICE
+            "price": price,
+
+            # TOTAL FOR THIS ITEM
+            "subtotal": subtotal,
+
+            # Cake
+            "cream": item.get("cream"),
+            "weight": item.get("weight"),
+
+            # Dynamic option
+            "option_id": item.get("option_id"),
+            "option_name": item.get("option_name"),
+        })
+
+    return render(
+        request,
+        "cart.html",
+        {
+            "cart_items": cart_items,
+            "total": total,
+        }
+    )
+
+
+# ============================================================
+# INCREASE QUANTITY
+# ============================================================
+
+def increase_quantity(request, key):
+
+    cart = request.session.get("cart", {})
+
+    if key in cart:
+
+        try:
+            current_quantity = int(
+                cart[key].get("quantity", 1)
+            )
+        except (TypeError, ValueError):
+            current_quantity = 1
+
+        cart[key]["quantity"] = (
+            current_quantity + 1
+        )
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+# ============================================================
+# DECREASE QUANTITY
+# ============================================================
+
+def decrease_quantity(request, key):
+
+    cart = request.session.get("cart", {})
+
+    if key in cart:
+
+        try:
+            current_quantity = int(
+                cart[key].get("quantity", 1)
+            )
+        except (TypeError, ValueError):
+            current_quantity = 1
+
+        current_quantity -= 1
+
+        if current_quantity <= 0:
+
+            del cart[key]
+
+        else:
+
+            cart[key]["quantity"] = current_quantity
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
+
+
+# ============================================================
+# REMOVE FROM CART
+# ============================================================
+
+def remove_from_cart(request, key):
+
+    cart = request.session.get("cart", {})
+
+    if key in cart:
+        del cart[key]
+
+    request.session["cart"] = cart
+    request.session.modified = True
+
+    return redirect("cart")
 
 
 # ================= CART VIEW =================
@@ -87,26 +484,37 @@ def cart_view(request):
 
     for key, item in cart.items():
 
-        # ✅ skip old invalid cart data
+        # Skip invalid cart data
         if not isinstance(item, dict):
             continue
 
-        product = Product.objects.filter(id=item['product_id']).first()
+        product = Product.objects.filter(
+            id=item.get('product_id')
+        ).first()
 
         if not product:
             continue
 
-        subtotal = item['price'] * item['quantity']
+        quantity = item.get('quantity', 1)
+        price = item.get('price', 0)
+
+        subtotal = price * quantity
         total += subtotal
 
         cart_items.append({
             'key': key,
             'product': product,
-            'quantity': item['quantity'],
+            'quantity': quantity,
             'subtotal': subtotal,
-            'cream': item['cream'],
-            'weight': item['weight'],
-            'price': item['price']
+            'price': price,
+
+            # Cake data
+            'cream': item.get('cream'),
+            'weight': item.get('weight'),
+
+            # Dynamic product option data
+            'option_id': item.get('option_id'),
+            'option_name': item.get('option_name'),
         })
 
     return render(request, 'cart.html', {
@@ -149,14 +557,12 @@ def remove_from_cart(request, key):
     return redirect('cart')
 
 
-# ================= CHECKOUT =================
+
 # ================= CHECKOUT =================
 from django.contrib.auth.decorators import login_required
 
 @login_required
 def checkout(request):
-
-    request.session['user_id'] = request.user.id
 
     cart = request.session.get('cart', {})
     buy_now = request.session.get('buy_now')
@@ -245,6 +651,7 @@ def checkout(request):
         request.session['selected_items'] = selected_keys
 
         address_id = request.POST.get("address_id")
+        request.session['address_id'] = address_id
         payment_method = request.POST.get("payment_method")
 
         if not address_id:
@@ -278,6 +685,12 @@ def checkout(request):
                     quantity=item['quantity'],
                     price=item['price']
                 )
+                    # ✅ ADD EMAIL HERE
+            import threading
+            threading.Thread(
+                target=send_order_email,
+                args=(request.user, order)
+            ).start()
 
             # 🔥 remove only selected items
             if selected_keys:
@@ -289,13 +702,7 @@ def checkout(request):
 
             request.session.pop('buy_now', None)
             request.session.pop('selected_items', None)
-            send_mail(
-                "Order Confirmed 🧁",
-                f"Hi {request.user.username}, your order #{order.id} has been placed successfully!",
-                "no-reply@jksoven.com",
-                [request.user.email],
-                fail_silently=True,
-            )
+
 
             return redirect(f"/order-success/?order_id={order.id}")
 
@@ -338,14 +745,88 @@ def profile(request):
     orders = Order.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'profile.html', {'orders': orders})
 
+# ================= Forgot password =================
+from django.contrib.auth.hashers import make_password
+
+# def forgot_password(request):
+#     if request.method == "POST":
+#         email = request.POST.get("email")
+
+#         try:
+#             user = User.objects.get(email=email)
+
+#             # 🔥 TEMP: direct reset link (no email for now)
+#             return redirect("reset_password", user_id=user.id)
+
+#         except User.DoesNotExist:
+#             messages.error(request, "Email not registered")
+#             return render(request, "forgot_password.html")
+
+#     return render(request, "forgot_password.html")
+
+# def reset_password(request, user_id):
+#     user = User.objects.get(id=user_id)
+
+#     if request.method == "POST":
+#         password = request.POST.get("password")
+#         confirm = request.POST.get("confirm_password")
+
+#         if password != confirm:
+#             messages.error(request, "Passwords do not match")
+#             return render(request, "reset_password.html")
+
+#         if len(password) < 6:
+#             messages.error(request, "Password too short")
+#             return render(request, "reset_password.html")
+
+#         user.password = make_password(password)
+#         user.save()
+
+#         messages.success(request, "Password updated successfully!")
+#         return redirect("login")
+
+#     return render(request, "reset_password.html")
 
 # ================= REGISTER =================
+from django.contrib import messages
+import re
+
 def register(request):
     if request.method == "POST":
-        username = request.POST['username']
-        email = request.POST['email']
-        password = request.POST['password']
+        username = request.POST.get("username")
+        email = request.POST.get("email")
+        password = request.POST.get("password")
+        confirm_password = request.POST.get("confirm_password")
 
+        # 🔴 Username exists check
+        if User.objects.filter(username=username).exists():
+            messages.error(request, "Username already exists")
+            return render(request, "register.html")
+
+        # 🔴 Email exists check
+        if User.objects.filter(email=email).exists():
+            messages.error(request, "Email already registered")
+            return render(request, "register.html")
+
+        # 🔴 Password match
+        if password != confirm_password:
+            messages.error(request, "Passwords do not match")
+            return render(request, "register.html")
+
+        # 🔴 Password strength check
+        if len(password) < 6:
+            messages.error(request, "Password must be at least 6 characters")
+            return render(request, "register.html")
+
+        if not re.search(r"[A-Z]", password):
+            messages.error(request, "Password must contain at least 1 uppercase letter")
+            return render(request, "register.html")
+
+        if not re.search(r"[0-9]", password):
+            messages.error(request, "Password must contain at least 1 number")
+            return render(request, "register.html")
+
+        # ✅ Create user
         user = User.objects.create_user(
             username=username,
             email=email,
@@ -353,10 +834,34 @@ def register(request):
         )
 
         login(request, user)
-        return redirect('home')
+        return redirect("home")
 
-    return render(request, 'register.html')
+    return render(request, "register.html")
 
+
+
+# ================= Login DETAIL ================
+def login_view(request):
+    next_url = request.GET.get("next")
+
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+
+            if next_url:
+                return redirect(next_url)
+
+            return redirect("profile")
+
+        else:
+            messages.error(request, "Invalid username or password")
+
+    return render(request, "login.html")
 
 # ================= PRODUCT DETAIL =================
 def product_detail(request, product_id):
@@ -402,15 +907,86 @@ def sweet_hub(request):
     else:
         products = Product.objects.all()
 
+    # Display price
+    for product in products:
+
+        if product.category == "cake":
+            product.display_price = product.whipping_price
+
+        elif product.category == "cookie":
+            product.display_price = product.cookie_pack_price
+
+        elif product.options.exists():
+            first_option = product.options.order_by("id").first()
+
+            if first_option:
+                product.display_price = first_option.price
+            else:
+                product.display_price = product.price
+
+        else:
+            product.display_price = product.price
+
+    # Category names
+    category_names = {
+        "cake": "Cakes",
+        "cookie": "Cookies",
+        "brownie": "Brownies",
+        "cheesecake": "Cheese Cakes",
+        "jarcake": "Jar Cakes",
+        "cinnamonroll": "Cinnamon Rolls",
+        "donut": "Donuts",
+        "bomboloni": "Bomboloni",
+        "tiramisu": "Tiramisu",
+        "cupcakes": "Cup Cakes",
+        "muffins": "Muffins",
+        "tresleches": "Tres Leches",
+        "icecream": "Ice Cream",
+    }
+
+    categories = []
+
+    for code, name in category_names.items():
+
+        first_product = Product.objects.filter(
+            category=code
+        ).first()
+
+        if first_product:
+            categories.append({
+                "code": code,
+                "name": name,
+                "image": first_product.image,
+            })
+
     return render(request, 'sweet_hub.html', {
-        'products': products
+        'products': products,
+        'categories': categories,
     })
-
-
 # ================= CATEGORY =================
 def category_products(request, category):
 
     products = Product.objects.filter(category=category)
+
+    # Set display price
+    for product in products:
+
+        if product.category == "cake":
+            product.display_price = product.whipping_price
+
+        elif product.category == "cookie":
+            product.display_price = product.cookie_pack_price
+
+        elif product.options.exists():
+            first_option = product.options.order_by("id").first()
+
+            if first_option:
+                product.display_price = first_option.price
+            else:
+                product.display_price = product.price
+
+        else:
+            product.display_price = product.price
 
     return render(request, "category_products.html", {
         "products": products,
@@ -511,42 +1087,220 @@ def delete_address(request, id):
 
 # ================= buy now =================
 
+# ================= BUY NOW =================
+
+# ================= BUY NOW =================
+
 @login_required
 def buy_now(request, product_id):
 
-    product = get_object_or_404(Product, id=product_id)
+    product = get_object_or_404(
+        Product,
+        id=product_id
+    )
 
     cream = request.GET.get("cream")
     weight = request.GET.get("weight")
+    option_id = request.GET.get("option_id")
 
-    if not cream or not weight:
-        return redirect('product_detail', product_id=product_id)
+    option = None
 
-    from decimal import Decimal
 
-    if cream == "whipping":
-        base_price = product.whipping_price
+    # ==================================================
+    # CAKE
+    # ==================================================
+
+    if product.category == "cake":
+
+        if not cream or not weight:
+
+            return redirect(
+                'product_detail',
+                product_id=product_id
+            )
+
+
+        if cream == "whipping":
+
+            base_price = product.whipping_price
+
+        elif cream == "butter":
+
+            base_price = product.buttercream_price
+
+        else:
+
+            return redirect(
+                'product_detail',
+                product_id=product_id
+            )
+
+
+        if base_price is None:
+
+            return redirect(
+                'product_detail',
+                product_id=product_id
+            )
+
+
+        try:
+
+            weight_decimal = Decimal(
+                str(weight)
+            )
+
+        except (
+            TypeError,
+            ValueError,
+            ArithmeticError
+        ):
+
+            return redirect(
+                'product_detail',
+                product_id=product_id
+            )
+
+
+        final_price = (
+            base_price *
+            weight_decimal
+        )
+
+
+
+    # ==================================================
+    # PRODUCT OPTION
+    # ==================================================
+
+    elif option_id:
+
+        try:
+
+            option = ProductOption.objects.get(
+                id=int(option_id),
+                product=product
+            )
+
+        except (
+            ProductOption.DoesNotExist,
+            ValueError,
+            TypeError
+        ):
+
+            return redirect(
+                'product_detail',
+                product_id=product_id
+            )
+
+
+        if option.price is None:
+
+            return redirect(
+                'product_detail',
+                product_id=product_id
+            )
+
+
+        try:
+
+            final_price = Decimal(
+                str(option.price)
+            )
+
+        except (
+            TypeError,
+            ValueError,
+            ArithmeticError
+        ):
+
+            return redirect(
+                'product_detail',
+                product_id=product_id
+            )
+
+
+
+    # ==================================================
+    # COOKIE
+    # ==================================================
+
+    elif product.category == "cookie":
+
+        final_price = (
+            product.cookie_pack_price
+        )
+
+
+        if final_price is None:
+
+            return redirect(
+                'product_detail',
+                product_id=product_id
+            )
+
+
+        final_price = Decimal(
+            str(final_price)
+        )
+
+
+
+    # ==================================================
+    # NORMAL PRODUCT
+    # ==================================================
+
     else:
-        base_price = product.buttercream_price
 
-    if not base_price:
-        return redirect('product_detail', product_id=product_id)
+        final_price = product.price
 
-    weight_decimal = Decimal(weight)
-    final_price = base_price * weight_decimal
 
-    # 🔥 store single product (temporary session)
+        if final_price is None:
+
+            return redirect(
+                'product_detail',
+                product_id=product_id
+            )
+
+
+        final_price = Decimal(
+            str(final_price)
+        )
+
+
+
+    # ==================================================
+    # BUY NOW SESSION
+    # ==================================================
+
     request.session['buy_now'] = {
+
         'product_id': product.id,
+
         'cream': cream,
+
         'weight': weight,
-        'price': float(final_price),
+
+        'option_id': option_id,
+
+        'option_name': (
+            option.option_name
+            if option
+            else None
+        ),
+
+        'price': float(
+            final_price
+        ),
+
         'quantity': 1
     }
 
+
+    request.session.modified = True
+
+
     return redirect('checkout')
-
-
 # =================  nbuy_now_from_cart =================
 @login_required
 def buy_now_from_cart(request, key):
@@ -566,11 +1320,14 @@ def buy_now_from_cart(request, key):
 
 
 from datetime import date
+from django.utils import timezone
+from datetime import date, timedelta
 
 @login_required
 def order_detail(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
 
+    # ✅ ETA LOGIC
     eta_message = ""
 
     if order.estimated_delivery:
@@ -592,10 +1349,19 @@ def order_detail(request, order_id):
     else:
         eta_message = "📦 Delivery date not available"
 
+    # ✅ CANCEL TIMER LOGIC
+    can_cancel = False
+    if order.status == "PENDING":
+        if timezone.now() - order.created_at <= timedelta(hours=1):
+            can_cancel = True
+
     return render(request, "order_detail.html", {
         "order": order,
-        "eta_message": eta_message
+        "eta_message": eta_message,
+        "can_cancel": can_cancel
     })
+
+
 
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import redirect, get_object_or_404
@@ -606,24 +1372,81 @@ from django.contrib.auth.models import User
 
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
+from datetime import date, timedelta
+import threading
+
+# 🔥 NON-BLOCKING EMAIL
+def send_order_email(user, order):
+    try:
+        items = order.items.all()
+
+        product_list = ""
+        for item in items:
+            product_list += f"- {item.product.name} (x{item.quantity}) - ₹{item.price}\n"
+
+        # ✅ PAYMENT TYPE
+        if order.payment_method == "COD":
+            payment_msg = f"Payment Method: Cash on Delivery 💵\nPlease keep ₹{order.total_amount} ready at delivery."
+        else:
+            payment_msg = "Payment Method: Paid Online ✅"
+
+        subject = f"JKS Oven 🍰 | Order #{order.id} Confirmed"
+
+        message = f"""
+Hi {user.username},
+
+🎉 Your order has been placed successfully!
+
+🧾 Order ID: #{order.id}
+
+🛍️ Items:
+{product_list}
+
+💰 Total Amount: ₹{order.total_amount}
+
+🚚 Estimated Delivery: {order.estimated_delivery}
+
+💳 {payment_msg}
+
+---------------------------------------
+Thank you for ordering from JKS Oven ❤️
+Enjoy your delicious treats!
+
+- JKS Oven Team
+"""
+
+        send_mail(
+            subject,
+            message,
+            "no-reply@jksoven.com",
+            [user.email],
+            fail_silently=True,
+        )
+
+    except Exception as e:
+        print("Email error:", e)
 @csrf_exempt
 def payment_success(request):
 
     if request.method == "POST":
 
         payment_id = request.POST.get("razorpay_payment_id")
-        user_id = request.POST.get("user_id")
         address_id = request.POST.get("address_id")
 
-        # 🔥 safety check
-        if not payment_id or not user_id or not address_id:
+        # ✅ AUTH CHECK
+        if not request.user.is_authenticated:
+            return redirect("login")
+
+        user = request.user
+
+        # ✅ VALIDATION
+        if not payment_id or not address_id:
             return redirect("checkout")
 
         if not payment_id.startswith("pay_"):
             return redirect("checkout")
 
         try:
-            user = User.objects.get(id=user_id)
             address = Address.objects.get(id=address_id)
 
             cart = request.session.get('cart', {})
@@ -692,14 +1515,16 @@ def payment_success(request):
                 estimated_delivery=eta
             )
 
-            # save items
-            for item in items_to_order:
-                OrderItem.objects.create(
+
+            # ================= SAVE ITEMS =================
+            OrderItem.objects.bulk_create([
+                OrderItem(
                     order=order,
                     product=item['product'],
                     quantity=item['quantity'],
                     price=item['price']
-                )
+                ) for item in items_to_order
+            ])
 
             # ================= REMOVE ITEMS =================
             if selected_keys:
@@ -713,15 +1538,13 @@ def payment_success(request):
             request.session.pop('selected_items', None)
             request.session.pop('buy_now', None)
 
-            # ================= EMAIL =================
-            send_mail(
-                "Payment Successful 🎉",
-                f"Hi {user.username}, your payment for order #{order.id} is successful!",
-                "no-reply@jksoven.com",
-                [user.email],
-                fail_silently=True,
-            )
+            # 🔥 NON-BLOCKING EMAIL (FIX DELAY)
+            threading.Thread(
+                target=send_order_email,
+                args=(user, order)
+            ).start()
 
+            # ✅ FAST REDIRECT
             return redirect(f"/order-success/?order_id={order.id}")
 
         except Exception as e:
@@ -772,20 +1595,6 @@ def cancel_order(request, order_id):
     return redirect("order_detail", order_id=order.id)
 
 
-
-def order_detail(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
-
-    # ⏱ check cancel allowed
-    can_cancel = False
-    if order.status == "PENDING":
-        if timezone.now() - order.created_at <= timedelta(hours=1):
-            can_cancel = True
-
-    return render(request, "order_detail.html", {
-        "order": order,
-        "can_cancel": can_cancel
-    })
 
 def download_invoice(request, order_id):
 

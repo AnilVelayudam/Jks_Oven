@@ -8,25 +8,22 @@
 <!-- Category Section -->
 <div class="category-grid">
 
-<a href="{% url 'category_products' 'cake' %}" class="category-card">
-    <img src="/static/images/cake_category.jpg">
-    <h3>Cakes</h3>
-</a>
+    {% for category in categories %}
 
-<a href="{% url 'category_products' 'cookie' %}" class="category-card">
-    <img src="/static/images/cookie_category.jpg">
-    <h3>Cookies</h3>
-</a>
+        <a href="{% url 'category_products' category.code %}"
+           class="category-card">
 
-<a href="{% url 'category_products' 'icecream' %}" class="category-card">
-    <img src="/static/images/icecream_category.jpg">
-    <h3>Ice Cream</h3>
-</a>
+            {% if category.image %}
+                <img src="{{ category.image.url }}" alt="{{ category.name }}">
+            {% else %}
+                <img src="/static/images/default.png" alt="{{ category.name }}">
+            {% endif %}
 
-<a href="{% url 'category_products' 'sweet' %}" class="category-card">
-    <img src="/static/images/sweet_category.jpg">
-    <h3>Sweets</h3>
-</a>
+            <h3>{{ category.name }}</h3>
+
+        </a>
+
+    {% endfor %}
 
 </div>
 

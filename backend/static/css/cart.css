@@ -163,7 +163,23 @@ body {
 /* EMPTY CART */
 .empty-cart {
     text-align: center;
-    margin-top: 80px;
-    font-size: 18px;
+    margin-top: 120px;
+}
+
+.empty-cart h2 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.empty-cart p {
     color: #777;
+    margin-bottom: 15px;
+}
+
+.empty-cart a {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #ff4d6d;
+    color: white;
+    border-radius: 8px;
 }

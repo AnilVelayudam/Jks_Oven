@@ -3,151 +3,129 @@
 <html>
 <head>
     <title>JK's Oven Point</title>
-    {% load static %}
-<link rel="stylesheet" href="{% static 'css/main.css' %}">
 
-<!-- <link rel="stylesheet" href="{% static 'css/style.css' %}"> -->
+    <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
+
 <body>
-    
 
-<nav>
+<!-- ✅ WRAPPER START -->
+<div class="page-wrapper">
 
-<!-- LEFT : Logo -->
-<div class="logo-section">
+    <!-- NAVBAR -->
+    <nav>
 
-    <a href="{% url 'home' %}" class="logo-link">
-        <img src="{% static 'images/jks_logo.png' %}" class="logo-img">
-        <div class="logo-text">JK's Oven</div>
-    </a>
+        <div class="logo-section">
+            <a href="{% url 'home' %}" class="logo-link">
+                <img src="{% static 'images/jks_logo.png' %}" class="logo-img">
+                <div class="logo-text">JK's Oven</div>
+            </a>
+        </div>
 
-</div>
+        <div class="search-box">
+            <input 
+                type="text"
+                id="search-input"
+                placeholder="Search cakes, cookies and more..."
+                autocomplete="off"
+            >
+            <div id="search-results" class="search-results"></div>
+        </div>
 
-<!-- CENTER : Search -->
-<div class="search-box">
+        <div class="nav-links">
 
-<input 
-type="text"
-id="search-input"
-placeholder="Search cakes, cookies and more..."
-autocomplete="off"
->
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'sweet_hub' %}">Sweet Hub</a>
 
-<div id="search-results" class="search-results"></div>
+            <a href="{% url 'cart' %}" class="cart-icon">
+                🛒 Cart
+                <span class="cart-count">
+                    {{ request.session.cart|length }}
+                </span>
+            </a>
 
-</div>
+            <div class="dropdown">
+                <div class="dropbtn">Profile ▾</div>
 
-<!-- RIGHT : Navigation -->
-<div class="nav-links">
+                <div class="dropdown-content">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'profile' %}">My Profile</a>
 
-    <a href="{% url 'home' %}">Home</a>
-    <a href="{% url 'sweet_hub' %}">Sweet Hub</a>
-
-    <!-- Cart with badge -->
-    <a href="{% url 'cart' %}" class="cart-icon">
-        🛒 Cart
-        <span class="cart-count">
-            {{ request.session.cart|length }}
-        </span>
-    </a>
-
-
-    <!-- Profile Dropdown (UNCHANGED) -->
-    <div class="dropdown">
-        <div class="dropbtn">Profile ▾</div>
-
-        <div class="dropdown-content">
-
-            {% if user.is_authenticated %}
-                <a href="{% url 'profile' %}">My Profile</a>
-
-                <form action="{% url 'logout' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit">Logout</button>
-                </form>
-
-            {% else %}
-                <a href="{% url 'login' %}">Login</a>
-                <a href="{% url 'register' %}">Register</a>
-            {% endif %}
+                        <form action="{% url 'logout' %}" method="post">
+                            {% csrf_token %}
+                            <button type="submit">Logout</button>
+                        </form>
+                    {% else %}
+                        <a href="{% url 'login' %}">Login</a>
+                        <a href="{% url 'register' %}">Register</a>
+                    {% endif %}
+                </div>
+            </div>
 
         </div>
-    </div>
+
+    </nav>
+
+    <!-- ✅ MAIN CONTENT -->
+    <main class="main-content">
+
+        {% block fullwidth %}
+        {% endblock %}
+
+        <div class="container">
+            {% block content %}
+            {% endblock %}
+        </div>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+
+        <div class="footer-container">
+
+            <div class="footer-section">
+                <h3>JK's Oven</h3>
+                <p>
+                    Fresh homemade cakes, cookies and brownies baked with love.
+                    Order your favourite desserts anytime!
+                </p>
+            </div>
+
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <a href="{% url 'home' %}">Home</a>
+                <a href="{% url 'sweet_hub' %}">Sweet Hub</a>
+                <a href="{% url 'cart' %}">Cart</a>
+                <a href="{% url 'profile' %}">Profile</a>
+            </div>
+
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p>Email: jksoven@gmail.com</p>
+                <p>Phone: +91 98765 43210</p>
+                <p>Location: Bangalore, India</p>
+            </div>
+
+            <div class="footer-section">
+                <h3>Follow Us</h3>
+                <p><a href="#">Instagram</a></p>
+                <p><a href="#">Facebook</a></p>
+                <p><a href="#">WhatsApp</a></p>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            © 2026 JK's Oven. All rights reserved.
+        </div>
+
+    </footer>
 
 </div>
-
-</nav>
-
-{% block fullwidth %}
-{% endblock %}
-<div class="container">
-    {% block content %}
-    {% endblock %}
-</div>
+<!-- ✅ WRAPPER END -->
 
 <script src="{% static 'js/main.js' %}"></script>
-
-<footer class="footer">
-
-<div class="footer-container">
-
-    <!-- About -->
-    <div class="footer-section">
-        <h3>JK's Oven</h3>
-        <p>
-            Fresh homemade cakes, cookies and brownies baked with love.
-            Order your favourite desserts anytime!
-        </p>
-    </div>
-
-    <!-- Quick Links -->
-    <div class="footer-section">
-        <h3>Quick Links</h3>
-        <a href="{% url 'home' %}">Home</a>
-        <a href="{% url 'sweet_hub' %}">Sweet Hub</a>
-        <a href="{% url 'cart' %}">Cart</a>
-        <a href="{% url 'profile' %}">Profile</a>
-    </div>
-
-    <!-- Contact -->
-    <div class="footer-section">
-        <h3>Contact</h3>
-        <p>Email: jksoven@gmail.com</p>
-        <p>Phone: +91 98765 43210</p>
-        <p>Location: Bangalore, India</p>
-    </div>
-
-<!-- Social -->
-<div class="footer-section">
-    <h3>Follow Us</h3>
-
-    <p>
-        <a href="https://www.instagram.com/your_instagram_username" target="_blank">
-            Instagram
-        </a>
-    </p>
-
-    <p>
-        <a href="https://www.facebook.com/your_facebook_page" target="_blank">
-            Facebook
-        </a>
-    </p>
-
-    <p>
-        <a href="https://wa.me/+91 7760901956" target="_blank">
-            WhatsApp
-        </a>
-    </p>
-
-</div>
-
-</div>
-
-<div class="footer-bottom">
-    © 2026 JK's Oven. All rights reserved.
-</div>
-
-</footer>
 
 </body>
 </html>

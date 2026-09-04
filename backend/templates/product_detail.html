@@ -1,180 +1,568 @@
 {% extends "base.html" %}
+
 {% load static %}
+
 {% block content %}
 
 <div class="product-page">
 
-<!-- LEFT : Product Image -->
-<div class="product-image-box">
+    <!-- =========================
+         LEFT : PRODUCT IMAGE
+    ========================== -->
 
-    <img id="mainImage" src="{{ product.image.url }}" alt="{{ product.name }}">
+    <div class="product-image-box">
 
-    <div class="thumbnail-container">
-        <img src="{{ product.image.url }}" onclick="changeImage(this)">
+        <img
+            id="mainImage"
+            src="{{ product.image.url }}"
+            alt="{{ product.name }}"
+        >
 
-        {% for img in product.images.all %}
-            <img src="{{ img.image.url }}" onclick="changeImage(this)">
-        {% endfor %}
+        <div class="thumbnail-container">
+
+            <img
+                src="{{ product.image.url }}"
+                onclick="changeImage(this)"
+            >
+
+            {% for img in product.images.all %}
+
+                <img
+                    src="{{ img.image.url }}"
+                    onclick="changeImage(this)"
+                >
+
+            {% endfor %}
+
+        </div>
+
     </div>
 
-</div>
 
-<!-- RIGHT : Product Info -->
-<div class="product-info">
+    <!-- =========================
+         RIGHT : PRODUCT INFO
+    ========================== -->
 
-    <h1>{{ product.name }}</h1>
-    {% if product.category == 'cake' and product.cake_type %}
-    <p class="cake-badge cake-{{ product.cake_type }}">
-        {{ product.get_cake_type_display }}
-    </p>
-    {% endif %}
+    <div class="product-info">
 
-    <div class="rating">
-        ⭐ {{ product.average_rating|floatformat:1 }}
-        ({{ reviews|length }} reviews)
-    </div>
+        <h1>{{ product.name }}</h1>
 
-    <p class="product-desc">
-        {{ product.description }}
-    </p>
 
-    <h3>Select Cream</h3>
-    <div class="cream-options">
-        <label>
-            <input type="radio" name="cream" value="whipping" checked>
-            <span>Whipping Cream</span>
-        </label>
+        <!-- CAKE TYPE -->
 
-        {% if product.buttercream_price %}
-        <label>
-            <input type="radio" name="cream" value="butter">
-            <span>Buttercream</span>
-        </label>
+        {% if product.category == "cake" and product.cake_type %}
+
+            <p class="cake-badge cake-{{ product.cake_type }}">
+                {{ product.get_cake_type_display }}
+            </p>
+
         {% endif %}
+
+
+        <!-- RATING -->
+
+        <div class="rating">
+
+            ⭐ {{ product.average_rating|floatformat:1 }}
+
+            ({{ reviews|length }} reviews)
+
+        </div>
+
+
+        <!-- DESCRIPTION -->
+
+        <p class="product-desc">
+            {{ product.description }}
+        </p>
+
+
+
+        <!-- =================================================
+             CAKE OPTIONS
+        ================================================== -->
+
+        {% if product.category == "cake" %}
+
+            <!-- CREAM -->
+
+            <h3>Select Cream</h3>
+
+            <div class="cream-options">
+
+                <label>
+
+                    <input
+                        type="radio"
+                        name="cream"
+                        value="whipping"
+                        checked
+                    >
+
+                    <span>Whipping Cream</span>
+
+                </label>
+
+
+                {% if product.buttercream_price %}
+
+                    <label>
+
+                        <input
+                            type="radio"
+                            name="cream"
+                            value="butter"
+                        >
+
+                        <span>Buttercream</span>
+
+                    </label>
+
+                {% endif %}
+
+            </div>
+
+
+            <!-- WEIGHT -->
+
+            <h3>Select Weight</h3>
+
+            <div class="weight-options">
+
+                <label>
+
+                    <input
+                        type="radio"
+                        name="weight"
+                        value="1"
+                        checked
+                    >
+
+                    <span>1kg</span>
+
+                </label>
+
+
+                <label>
+
+                    <input
+                        type="radio"
+                        name="weight"
+                        value="2"
+                    >
+
+                    <span>2kg</span>
+
+                </label>
+
+
+                <label>
+
+                    <input
+                        type="radio"
+                        name="weight"
+                        value="3"
+                    >
+
+                    <span>3kg</span>
+
+                </label>
+
+            </div>
+
+
+            <!-- CUSTOM WEIGHT -->
+
+            <div style="margin-top:10px;">
+
+                <input
+                    type="number"
+                    id="customWeight"
+                    min="1"
+                    max="20"
+                    placeholder="Enter weight (1–20 kg)"
+                    style="
+                        padding:8px;
+                        width:100%;
+                        border-radius:8px;
+                    "
+                >
+
+            </div>
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             DYNAMIC PRODUCT OPTIONS
+             
+             Cookie, Brownie, Cheese Cake, Jar Cake,
+             Cinnamon Roll, Donut, Bomboloni, Tiramisu,
+             Cup Cakes, Muffins, Tres Leches, Ice Cream
+        ================================================== -->
+
+        {% if product.category != "cake" %}
+
+            {% if product.options.all %}
+
+                <div class="product-options">
+
+                    <h3>
+                        Choose Option
+                    </h3>
+
+
+                    <div class="option-buttons">
+
+                        {% for option in product.options.all %}
+
+                            <button
+                                type="button"
+                                class="product-option-btn {% if forloop.first %}active{% endif %}"
+                                data-option-id="{{ option.id }}"
+                                data-option-name="{{ option.option_name }}"
+                                data-price="{{ option.price }}"
+                                onclick="selectProductOption(this)"
+                            >
+
+                                {{ option.option_name }}
+
+                            </button>
+
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+
+            {% endif %}
+
+        {% endif %}
+
+
+
+        <!-- =================================================
+             PRICE
+        ================================================== -->
+
+        <h2 class="price" id="price">
+
+            {% if product.category == "cake" %}
+
+                ₹{{ product.whipping_price }}
+
+            {% elif product.options.exists %}
+
+                ₹{{ product.options.first.price }}
+
+            {% elif product.category == "cookie" %}
+
+                ₹{{ product.cookie_pack_price }}
+
+            {% else %}
+
+                ₹{{ product.price }}
+
+            {% endif %}
+
+        </h2>
+
+
+
+        <!-- =================================================
+             BUTTONS
+        ================================================== -->
+
+        <button
+            id="addBtn"
+            class="buy-btn primary"
+            onclick="addToCart()"
+        >
+            Add To Cart
+        </button>
+
+
+        <button
+            class="buy-btn secondary"
+            onclick="orderNow()"
+        >
+            Order Now
+        </button>
+
     </div>
 
-<h3>Select Weight</h3>
-
-<div class="weight-options">
-
-    <!-- default 1kg -->
-    <label>
-        <input type="radio" name="weight" value="1" checked>
-        <span>1kg</span>
-    </label>
-
-    <label>
-        <input type="radio" name="weight" value="2">
-        <span>2kg</span>
-    </label>
-
-    <label>
-        <input type="radio" name="weight" value="3">
-        <span>3kg</span>
-    </label>
-
 </div>
 
-<!-- CUSTOM KG INPUT -->
-<div style="margin-top:10px;">
-    <input 
-        type="number" 
-        id="customWeight"
-        min="1" 
-        max="20" 
-        placeholder="Enter weight (1–20 kg)"
-        style="padding:8px; width:100%; border-radius:8px;"
-    >
-</div>
 
-    <h2 class="price" id="price"></h2>
-
-    <br>
-
-    <button class="buy-btn primary" onclick="addToCart()">Add To Cart</button>
-    <button class="buy-btn secondary" onclick="orderNow()">Order Now</button>
-
-</div>
-</div>
 
 <hr style="margin:40px 0;">
 
-<!-- ⭐ REVIEWS SECTION -->
+
+
+<!-- =====================================================
+     REVIEWS SECTION
+====================================================== -->
+
 <div class="review-section">
 
     <h2>Customer Reviews</h2>
 
-    <!-- Reviews List -->
+
     <div class="reviews-container">
+
         {% for review in reviews %}
-        <div class="review-card">
 
-            <div class="review-header">
-                <strong>{{ review.user.username }}</strong>
+            <div class="review-card">
 
-                <div class="stars">
-                    {% for i in "12345" %}
-                        {% if forloop.counter <= review.rating %}
-                            ⭐
-                        {% else %}
-                            ☆
-                        {% endif %}
-                    {% endfor %}
+                <div class="review-header">
+
+                    <strong>
+                        {{ review.user.username }}
+                    </strong>
+
+
+                    <div class="stars">
+
+                        {% for i in "12345" %}
+
+                            {% if forloop.counter <= review.rating %}
+
+                                ⭐
+
+                            {% else %}
+
+                                ☆
+
+                            {% endif %}
+
+                        {% endfor %}
+
+                    </div>
+
                 </div>
+
+
+                <p>
+                    {{ review.comment }}
+                </p>
+
+
+                {% if review.image %}
+
+                    <img
+                        src="{{ review.image.url }}"
+                        class="review-img"
+                    >
+
+                {% endif %}
+
             </div>
 
-            <p>{{ review.comment }}</p>
 
-            {% if review.image %}
-                <img src="{{ review.image.url }}" class="review-img">
-            {% endif %}
+        {% empty %}
+
+            <p class="no-review">
+                No reviews yet
+            </p>
+
+        {% endfor %}
+
+    </div>
+
+
+
+    <!-- =================================================
+         REVIEW FORM
+    ================================================== -->
+
+    {% if user.is_authenticated %}
+
+        <div class="review-form-box">
+
+            <h3>
+                Write a Review
+            </h3>
+
+
+            <form
+                method="POST"
+                action="{% url 'add_review' product.id %}"
+                enctype="multipart/form-data"
+            >
+
+                {% csrf_token %}
+
+
+                <select
+                    name="rating"
+                    class="input-field"
+                >
+
+                    <option value="5">
+                        ⭐⭐⭐⭐⭐
+                    </option>
+
+                    <option value="4">
+                        ⭐⭐⭐⭐
+                    </option>
+
+                    <option value="3">
+                        ⭐⭐⭐
+                    </option>
+
+                    <option value="2">
+                        ⭐⭐
+                    </option>
+
+                    <option value="1">
+                        ⭐
+                    </option>
+
+                </select>
+
+
+                <textarea
+                    name="comment"
+                    placeholder="Write your experience..."
+                    class="input-field"
+                ></textarea>
+
+
+                <input
+                    type="file"
+                    name="image"
+                    class="input-field"
+                >
+
+
+                <button
+                    type="submit"
+                    class="submit-btn"
+                >
+                    Submit Review
+                </button>
+
+            </form>
 
         </div>
-        {% empty %}
-        <p class="no-review">No reviews yet</p>
-        {% endfor %}
-    </div>
 
-    <!-- Add Review -->
-    {% if user.is_authenticated %}
-    <div class="review-form-box">
-
-        <h3>Write a Review</h3>
-
-        <form method="POST" action="{% url 'add_review' product.id %}" enctype="multipart/form-data">
-            {% csrf_token %}
-
-            <select name="rating" class="input-field">
-                <option value="5">⭐⭐⭐⭐⭐</option>
-                <option value="4">⭐⭐⭐⭐</option>
-                <option value="3">⭐⭐⭐</option>
-                <option value="2">⭐⭐</option>
-                <option value="1">⭐</option>
-            </select>
-
-            <textarea name="comment" placeholder="Write your experience..." class="input-field"></textarea>
-
-            <input type="file" name="image" class="input-field">
-
-            <button type="submit" class="submit-btn">Submit Review</button>
-
-        </form>
-
-    </div>
     {% else %}
-    <p>Please login to write a review.</p>
+
+        <p>
+            Please login to write a review.
+        </p>
+
     {% endif %}
 
 </div>
-<script>
-window.basePrices = {
-    whipping: {{ product.whipping_price }},
-    butter: {{ product.buttercream_price|default:"null" }}
-};
 
-window.productId = "{{ product.id }}";
+
+
+<!-- =====================================================
+     JAVASCRIPT DATA
+====================================================== -->
+
+<script>
+
+    /* -----------------------------------------
+       PRODUCT ID
+    ----------------------------------------- */
+
+    window.productId = "{{ product.id }}";
+
+
+    /* -----------------------------------------
+       CAKE DATA
+    ----------------------------------------- */
+
+    {% if product.category == "cake" %}
+
+        window.basePrices = {
+
+            whipping: {{ product.whipping_price }},
+
+            butter:
+                {% if product.buttercream_price %}
+                    {{ product.buttercream_price }}
+                {% else %}
+                    null
+                {% endif %}
+
+        };
+
+    {% else %}
+
+        window.basePrices = null;
+
+    {% endif %}
+
+
+
+    /* -----------------------------------------
+       PRODUCT OPTIONS
+       
+       Used for:
+       Cookie
+       Brownie
+       Cheese Cake
+       Jar Cake
+       Cinnamon Roll
+       Donut
+       Bomboloni
+       Tiramisu
+       Cup Cakes
+       Muffins
+       Tres Leches
+       Ice Cream
+    ----------------------------------------- */
+
+    window.productOptions = [];
+
+
+    {% for option in product.options.all %}
+
+        window.productOptions.push({
+
+            id: "{{ option.id }}",
+
+            name: "{{ option.option_name|escapejs }}",
+
+            price: parseFloat("{{ option.price }}")
+
+        });
+
+    {% endfor %}
+
+
+
+    /* -----------------------------------------
+       DEFAULT SELECTED OPTION
+    ----------------------------------------- */
+
+    {% if product.options.exists %}
+
+        window.selectedProductOptionId =
+            "{{ product.options.first.id }}";
+
+        window.selectedProductOptionPrice =
+            parseFloat("{{ product.options.first.price }}");
+
+    {% else %}
+
+        window.selectedProductOptionId = null;
+
+        window.selectedProductOptionPrice = null;
+
+    {% endif %}
+
 </script>
 
+
+
+<!-- PRODUCT JAVASCRIPT -->
+
 <script src="{% static 'js/product.js' %}"></script>
+
 
 {% endblock %}

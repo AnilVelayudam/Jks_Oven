@@ -1,32 +1,52 @@
 {% extends "base.html" %}
 {% block content %}
 
-<div style="max-width:400px;margin:auto;background:white;padding:30px;border-radius:10px;">
+<div class="auth-container">
 
-<h2 style="text-align:center;">Login</h2>
+    <div class="auth-box">
+        <h2>Welcome Back 👋</h2>
+                    {% if messages %}
+                {% for message in messages %}
+                    <div class="alert-box">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        <p class="sub-text">Login to your account</p>
 
-<form method="post">
-    {% csrf_token %}
-    
-    {{ form.as_p }}
+        <form method="post">
+            {% csrf_token %}
 
-    <button type="submit" style="width:100%;padding:10px;background:#0e7490;color:white;border:none;">
-        SIGN IN
-    </button>
+            <div class="input-group">
+                <label>Username</label>
+                <input type="text" name="username" required>
+            </div>
 
-</form>
-
-<hr>
-
-<p style="text-align:center;">
-    New customer?
+            <div class="input-group">
+                <label>Password</label>
+                <div class="password-box">
+                    <input type="password" name="password" id="password" required>
+                </div>
+                <p style="text-align:right;">
+    <a href="{% url 'password_reset' %}">Forgot Password?</a>
 </p>
+            </div>
 
-<div style="text-align:center;">
-    <a href="{% url 'register' %}" 
-       style="background:#16a34a;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;">
-       Create Account
-    </a>
+            <button type="submit" class="auth-btn">Login</button>
+        </form>
+
+        <p class="switch-text">
+            New user? <a href="{% url 'register' %}">Create account</a>
+        </p>
+    </div>
+
 </div>
-</div>
+
+<script>
+function togglePassword() {
+    const input = document.getElementById("password");
+    input.type = input.type === "password" ? "text" : "password";
+}
+</script>
+
 {% endblock %}

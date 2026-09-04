@@ -20,41 +20,49 @@ var options = {
     "description": "Order Payment",
     "order_id": "{{ payment.id }}",
 
-    // ✅ USE HANDLER (NO REDIRECT)
+    // ✅ PAYMENT SUCCESS
     "handler": function (response) {
 
-    var form = document.createElement("form");
-    form.method = "POST";
-    form.action = "{% url 'payment_success' %}";
+        // 🔥 SHOW LOADING SCREEN (FIX DELAY ISSUE)
+        document.body.innerHTML = `
+            <div style="
+                height:100vh;
+                display:flex;
+                justify-content:center;
+                align-items:center;
+                flex-direction:column;
+                font-family:sans-serif;
+            ">
+                <h2>Processing your order...</h2>
+                <p>Please wait, do not refresh</p>
+            </div>
+        `;
 
-    // CSRF
-    var csrf = document.createElement("input");
-    csrf.type = "hidden";
-    csrf.name = "csrfmiddlewaretoken";
-    csrf.value = "{{ csrf_token }}";
+        var form = document.createElement("form");
+        form.method = "POST";
+        form.action = "{% url 'payment_success' %}";
 
-    // PAYMENT ID
-    var payment_id = document.createElement("input");
-    payment_id.type = "hidden";
-    payment_id.name = "razorpay_payment_id";
-    payment_id.value = response.razorpay_payment_id;
+        // CSRF
+        var csrf = document.createElement("input");
+        csrf.type = "hidden";
+        csrf.name = "csrfmiddlewaretoken";
+        csrf.value = "{{ csrf_token }}";
 
-    // ✅ ADD USER ID
-    var user_id = document.createElement("input");
-    user_id.type = "hidden";
-    user_id.name = "user_id";
-    user_id.value = "{{ request.user.id }}";
+        // PAYMENT ID
+        var payment_id = document.createElement("input");
+        payment_id.type = "hidden";
+        payment_id.name = "razorpay_payment_id";
+        payment_id.value = response.razorpay_payment_id;
 
-    // ✅ ADD ADDRESS ID
-    var address_id = document.createElement("input");
-    address_id.type = "hidden";
-    address_id.name = "address_id";
-    address_id.value = "{{ request.session.address_id }}";
+        // ADDRESS ID
+        var address_id = document.createElement("input");
+        address_id.type = "hidden";
+        address_id.name = "address_id";
+        address_id.value = "{{ request.session.address_id }}";
 
-    form.appendChild(csrf);
-    form.appendChild(payment_id);
-    form.appendChild(user_id);
-    form.appendChild(address_id);
+        form.appendChild(csrf);
+        form.appendChild(payment_id);
+        form.appendChild(address_id);
 
         document.body.appendChild(form);
         form.submit();
@@ -65,34 +73,25 @@ var options = {
     }
 };
 
+// ✅ INIT RAZORPAY
 var rzp = new Razorpay(options);
 
-document.getElementById("pay-btn").onclick = function(e){
-    rzp.open();
-    e.preventDefault();
-
-    
-};
-</script>
-
-<script>
-var rzp = new Razorpay(options);
-
+// ✅ OPEN PAYMENT
 document.getElementById("pay-btn").onclick = function(e){
     rzp.open();
     e.preventDefault();
 };
 
-// ✅ ADD THIS BLOCK (STEP 4)
+// ❌ PAYMENT FAILED
 rzp.on('payment.failed', function (response){
 
     alert("Payment Failed ❌");
 
     console.log(response.error);
 
-    // redirect back to checkout
     window.location.href = "/checkout/";
 });
 </script>
+
 </body>
 </html>

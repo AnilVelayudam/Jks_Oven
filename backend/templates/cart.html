@@ -15,131 +15,319 @@
 
         <!-- SELECT ALL -->
         <div style="margin-bottom:10px;">
-            <input type="checkbox" id="select-all"> <b>Select All</b>
+            <input type="checkbox" id="select-all">
+            <b>Select All</b>
         </div>
 
         {% for item in cart_items %}
+
         <div class="cart-card">
 
             <!-- CHECKBOX -->
-            <input 
-                type="checkbox" 
-                class="item-checkbox" 
-                name="selected_items" 
+            <input
+                type="checkbox"
+                class="item-checkbox"
+                name="selected_items"
                 value="{{ item.key }}"
                 data-price="{{ item.subtotal }}"
             >
 
-            <img src="{{ item.product.image.url }}" class="cart-img">
+            <!-- PRODUCT IMAGE -->
+            <img
+                src="{{ item.product.image.url }}"
+                class="cart-img"
+                alt="{{ item.product.name }}"
+            >
 
             <div class="cart-info">
+
+                <!-- PRODUCT NAME -->
                 <h3>{{ item.product.name }}</h3>
 
-                <p><b>Cream:</b> {{ item.cream|title }}</p>
-                <p><b>Weight:</b> {{ item.weight }} kg</p>
 
-                <p class="price">₹{{ item.price }}</p>
+                <!-- ================= CAKE ================= -->
+                {% if item.product.category == "cake" %}
 
+                    {% if item.cream %}
+                    <p>
+                        <b>Cream:</b>
+                        {{ item.cream|title }}
+                    </p>
+                    {% endif %}
+
+                    {% if item.weight %}
+                    <p>
+                        <b>Weight:</b>
+                        {{ item.weight }} kg
+                    </p>
+                    {% endif %}
+
+
+                <!-- ================= COOKIE ================= -->
+                {% elif item.product.category == "cookie" %}
+
+                    {% if item.product.cookie_quantity %}
+                    <p>
+                        <b>Quantity:</b>
+                        {{ item.product.cookie_quantity }} Cookies
+                    </p>
+                    {% endif %}
+
+
+                <!-- ============ ALL DYNAMIC OPTIONS ============ -->
+                {% elif item.option_name %}
+
+                    <p>
+                        <b>Option:</b>
+                        {{ item.option_name }}
+                    </p>
+
+
+                <!-- ================= NORMAL PRODUCT ================= -->
+                {% else %}
+
+                    <p>
+                        <b>Category:</b>
+                        {{ item.product.category|title }}
+                    </p>
+
+                {% endif %}
+
+
+                <!-- PRICE -->
+                <p class="price">
+                    ₹{{ item.price }}
+                </p>
+
+
+                <!-- QUANTITY CONTROLS -->
                 <div class="qty-box">
 
                     <a href="{% url 'decrease_quantity' item.key %}">
-                        <button type="button" class="qty-btn">-</button>
+                        <button
+                            type="button"
+                            class="qty-btn"
+                        >
+                            -
+                        </button>
                     </a>
 
-                    <span class="qty-number">{{ item.quantity }}</span>
+
+                    <span class="qty-number">
+                        {{ item.quantity }}
+                    </span>
+
 
                     <a href="{% url 'increase_quantity' item.key %}">
-                        <button type="button" class="qty-btn">+</button>
+                        <button
+                            type="button"
+                            class="qty-btn"
+                        >
+                            +
+                        </button>
                     </a>
 
+
+                    <!-- REMOVE -->
                     <a href="{% url 'remove_from_cart' item.key %}">
-                        <button type="button" class="remove-btn">Remove</button>
+                        <button
+                            type="button"
+                            class="remove-btn"
+                        >
+                            Remove
+                        </button>
                     </a>
+
 
                     <!-- SINGLE ORDER -->
                     <a href="/buy-now-item/{{ item.key }}/">
-                        <button type="button" class="order-btn">⚡ Order</button>
+                        <button
+                            type="button"
+                            class="order-btn"
+                        >
+                            ⚡ Order
+                        </button>
                     </a>
 
                 </div>
 
-                <p class="subtotal">Subtotal: ₹{{ item.subtotal }}</p>
+
+                <!-- SUBTOTAL -->
+                <p class="subtotal">
+                    Subtotal: ₹{{ item.subtotal }}
+                </p>
 
             </div>
 
         </div>
+
         {% endfor %}
 
     </div>
 
-    <!-- RIGHT -->
+
+    <!-- RIGHT : ORDER SUMMARY -->
     <div class="summary-box">
+
         <h3>Order Summary</h3>
+
         <hr>
 
         <p class="total">
-            Total: ₹<span id="dynamic-total">{{ total }}</span>
+            Total: ₹<span id="dynamic-total">0.00</span>
         </p>
 
-        <!-- MAIN BUTTON -->
-        <button type="submit" id="checkout-btn" class="checkout-btn">
+
+        <!-- CHECKOUT -->
+        <button
+            type="submit"
+            id="checkout-btn"
+            class="checkout-btn"
+            disabled
+            style="opacity:0.5;"
+        >
             Proceed Selected Items →
         </button>
+
     </div>
 
 </div>
 
 </form>
 
+
 {% else %}
+
 <p>Your cart is empty.</p>
+
 {% endif %}
 
-<!-- 🔥 SCRIPT -->
+
+
+<!-- ================= JAVASCRIPT ================= -->
+
 <script>
 
 const checkboxes = document.querySelectorAll(".item-checkbox");
+
 const totalBox = document.getElementById("dynamic-total");
+
 const checkoutBtn = document.getElementById("checkout-btn");
+
 const selectAll = document.getElementById("select-all");
 
-// update total
+
+// ================================================
+// UPDATE TOTAL
+// ================================================
+
 function updateTotal() {
+
     let total = 0;
+
     let count = 0;
 
-    checkboxes.forEach(cb => {
+
+    checkboxes.forEach(function(cb) {
+
         if (cb.checked) {
-            total += parseFloat(cb.dataset.price);
+
+            const price = parseFloat(cb.dataset.price) || 0;
+
+            total += price;
+
             count++;
         }
+
     });
 
-    totalBox.innerText = total.toFixed(2);
 
-    // disable button if nothing selected
-    if (checkoutBtn) {
-        checkoutBtn.disabled = count === 0;
-        checkoutBtn.style.opacity = count === 0 ? "0.5" : "1";
+    if (totalBox) {
+
+        totalBox.innerText = total.toFixed(2);
+
     }
+
+
+    // Enable / disable checkout button
+
+    if (checkoutBtn) {
+
+        checkoutBtn.disabled = count === 0;
+
+        checkoutBtn.style.opacity =
+            count === 0 ? "0.5" : "1";
+
+        checkoutBtn.style.cursor =
+            count === 0 ? "not-allowed" : "pointer";
+    }
+
+
+    // Update Select All checkbox
+
+    if (selectAll) {
+
+        if (checkboxes.length === 0) {
+
+            selectAll.checked = false;
+
+        } else {
+
+            selectAll.checked =
+                Array.from(checkboxes).every(
+                    cb => cb.checked
+                );
+
+        }
+
+    }
+
 }
 
-// individual checkbox change
-checkboxes.forEach(cb => {
-    cb.addEventListener("change", updateTotal);
+
+// ================================================
+// INDIVIDUAL CHECKBOX
+// ================================================
+
+checkboxes.forEach(function(cb) {
+
+    cb.addEventListener("change", function() {
+
+        updateTotal();
+
+    });
+
 });
 
-// select all
+
+// ================================================
+// SELECT ALL
+// ================================================
+
 if (selectAll) {
+
     selectAll.addEventListener("change", function() {
-        checkboxes.forEach(cb => cb.checked = this.checked);
+
+        checkboxes.forEach(function(cb) {
+
+            cb.checked = selectAll.checked;
+
+        });
+
         updateTotal();
+
     });
+
 }
 
-// initial load
+
+// ================================================
+// INITIAL LOAD
+// ================================================
+
 updateTotal();
 
 </script>
+
 
 {% endblock %}

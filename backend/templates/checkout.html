@@ -3,177 +3,422 @@
 
 <div class="checkout-wrapper">
 
-<h1 class="checkout-title">Checkout</h1>
+    <h1 class="checkout-title">Checkout</h1>
 
-<form method="POST">
-{% csrf_token %}
+    <form method="POST">
+        {% csrf_token %}
 
-<div class="checkout-container">
+        <div class="checkout-container">
 
-    <!-- LEFT : ADDRESS -->
-    <div class="address-section">
+            <!-- ========================================= -->
+            <!-- LEFT : ADDRESS -->
+            <!-- ========================================= -->
 
-        <h3>Select Address</h3>
+            <div class="address-section">
 
-        {% for addr in addresses %}
-        <div class="address-card">
+                <h3>Select Address</h3>
 
-            <!-- RADIO + CONTENT -->
-            <label class="address-main">
-                <input type="radio" name="address_id" value="{{ addr.id }}" required>
+                {% for addr in addresses %}
 
-                <div class="address-content">
-                    <b>{{ addr.full_name }}</b>
-                    <p>{{ addr.house }}, {{ addr.area }}</p>
-                    <p>{{ addr.city }} - {{ addr.pincode }}</p>
-                    <p>{{ addr.state }}</p>
-                    <p>📞 {{ addr.phone }}</p>
+                <div class="address-card">
+
+                    <!-- RADIO + CONTENT -->
+                    <label class="address-main">
+
+                        <input
+                            type="radio"
+                            name="address_id"
+                            value="{{ addr.id }}"
+                            required
+                        >
+
+                        <div class="address-content">
+
+                            <b>{{ addr.full_name }}</b>
+
+                            <p>
+                                {{ addr.house }}, {{ addr.area }}
+                            </p>
+
+                            <p>
+                                {{ addr.city }} - {{ addr.pincode }}
+                            </p>
+
+                            <p>
+                                {{ addr.state }}
+                            </p>
+
+                            <p>
+                                📞 {{ addr.phone }}
+                            </p>
+
+                        </div>
+
+                    </label>
+
+                    <!-- ACTION BUTTONS -->
+                    <div class="address-actions">
+
+                        <a href="{% url 'edit_address' addr.id %}">
+                            <button
+                                type="button"
+                                class="edit-btn"
+                            >
+                                ✏️ Edit
+                            </button>
+                        </a>
+
+                        <a href="{% url 'delete_address' addr.id %}">
+                            <button
+                                type="button"
+                                class="delete-btn"
+                            >
+                                🗑 Delete
+                            </button>
+                        </a>
+
+                    </div>
+
                 </div>
-            </label>
 
-            <!-- ACTION BUTTONS -->
-            <div class="address-actions">
+                {% empty %}
 
-                <a href="{% url 'edit_address' addr.id %}">
-                    <button type="button" class="edit-btn">✏️ Edit</button>
+                <p>No address saved</p>
+
+                {% endfor %}
+
+
+                <!-- ADD ADDRESS -->
+                <a
+                    href="{% url 'add_address' %}"
+                    class="add-address-btn"
+                >
+                    + Add New Address
                 </a>
 
-                <a href="{% url 'delete_address' addr.id %}">
-                    <button type="button" class="delete-btn">🗑 Delete</button>
-                </a>
+            </div>
+
+
+            <!-- ========================================= -->
+            <!-- RIGHT : ORDER SUMMARY -->
+            <!-- ========================================= -->
+
+            <div class="checkout-summary">
+
+
+                <!-- DELIVERY ERROR -->
+                {% if error %}
+
+                <div
+                    id="deliveryErrorPopup"
+                    class="delivery-error-popup"
+                >
+
+                    <div class="delivery-error-icon">
+                        🚚
+                    </div>
+
+                    <div class="delivery-error-content">
+
+                        <strong>
+                            Delivery Not Available
+                        </strong>
+
+                        <p>
+                            {{ error }}
+                        </p>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        onclick="closeDeliveryError()"
+                        class="delivery-error-close"
+                    >
+                        ×
+                    </button>
+
+                </div>
+
+                {% endif %}
+
+
+                <!-- ORDER SUMMARY -->
+                <h3>Order Summary</h3>
+
+                <div class="price-box">
+
+                    <div class="price-row">
+
+                        <span>
+                            Items Total
+                        </span>
+
+                        <span>
+                            ₹{{ total }}
+                        </span>
+
+                    </div>
+
+
+                    <div class="price-row">
+
+                        <span>
+                            Delivery Fee
+                        </span>
+
+                        <span>
+                            ₹0
+                        </span>
+
+                    </div>
+
+
+                    <div class="price-row">
+
+                        <span>
+                            Discount
+                        </span>
+
+                        <span style="color:green;">
+                            -₹0
+                        </span>
+
+                    </div>
+
+
+                    <hr>
+
+
+                    <div class="total-row">
+
+                        <span>
+                            Total Amount
+                        </span>
+
+                        <span>
+                            ₹{{ total }}
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <!-- PAYMENT METHOD -->
+                <h3 style="margin-top:20px;">
+                    Select Payment Method
+                </h3>
+
+
+                <div class="payment-methods">
+
+                    <label class="payment-card">
+
+                        <input
+                            type="radio"
+                            name="payment_method"
+                            value="online"
+                            checked
+                            required
+                        >
+
+                        <span>
+                            💳 Pay Online (Razorpay)
+                        </span>
+
+                    </label>
+
+
+                    <label class="payment-card">
+
+                        <input
+                            type="radio"
+                            name="payment_method"
+                            value="cod"
+                            required
+                        >
+
+                        <span>
+                            💵 Cash on Delivery
+                        </span>
+
+                    </label>
+
+                </div>
+
+
+                <!-- PLACE ORDER -->
+                <button
+                    type="submit"
+                    class="place-order-btn"
+                >
+                    Place Order
+                </button>
 
             </div>
 
         </div>
 
-        {% empty %}
-        <p>No address saved</p>
-        {% endfor %}
-
-        <a href="{% url 'add_address' %}" class="add-address-btn">
-            + Add New Address
-        </a>
-
-    </div>
-
-    <!-- RIGHT : SUMMARY -->
-    <div class="checkout-summary">
-
-        <h3>Order Summary</h3>
-
-        <div class="price-box">
-            <div class="price-row">
-                <span>Items Total</span>
-                <span>₹{{ total }}</span>
-            </div>
-
-            <div class="price-row">
-                <span>Delivery Fee</span>
-                <span>₹0</span>
-            </div>
-
-            <div class="price-row">
-                <span>Discount</span>
-                <span style="color:green;">-₹0</span>
-            </div>
-
-            <hr>
-
-            <div class="total-row">
-                <span>Total Amount</span>
-                <span>₹{{ total }}</span>
-            </div>
-        </div>
-
-        <!-- PAYMENT METHOD -->
-        <h3 style="margin-top:20px;">Select Payment Method</h3>
-
-        <div class="payment-methods">
-
-            <label class="payment-card">
-                <input type="radio" name="payment_method" value="online" checked required>
-                <span>💳 Pay Online (Razorpay)</span>
-            </label>
-
-            <label class="payment-card">
-                <input type="radio" name="payment_method" value="cod" required>
-                <span>💵 Cash on Delivery</span>
-            </label>
-
-        </div>
-
-        <!-- BUTTON -->
-        <button type="submit" class="place-order-btn">
-            Place Order
-        </button>
-
-    </div>
+    </form>
 
 </div>
 
-</form>
 
-</div>
+<!-- ========================================= -->
+<!-- RAZORPAY -->
+<!-- ========================================= -->
 
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
+
 {% if open_payment %}
+
 <script>
 
 var options = {
+
     "key": "{{ razorpay_key }}",
+
     "amount": "{{ amount|floatformat:2|add:'0' }}",
+
     "currency": "INR",
+
     "name": "JKS Oven",
+
     "description": "Order Payment",
+
     "order_id": "{{ razorpay_order_id }}",
+
 
     "handler": function (response) {
 
         var form = document.createElement("form");
+
         form.method = "POST";
+
         form.action = "{% url 'payment_success' %}";
 
+
         var csrf = document.createElement("input");
+
         csrf.type = "hidden";
+
         csrf.name = "csrfmiddlewaretoken";
+
         csrf.value = "{{ csrf_token }}";
 
+
         var payment_id = document.createElement("input");
+
         payment_id.type = "hidden";
+
         payment_id.name = "razorpay_payment_id";
+
         payment_id.value = response.razorpay_payment_id;
 
+
         var user_id = document.createElement("input");
+
         user_id.type = "hidden";
+
         user_id.name = "user_id";
+
         user_id.value = "{{ request.user.id }}";
 
+
         var address_id = document.createElement("input");
+
         address_id.type = "hidden";
+
         address_id.name = "address_id";
+
         address_id.value = "{{ selected_address }}";
 
+
         form.appendChild(csrf);
+
         form.appendChild(payment_id);
+
         form.appendChild(user_id);
+
         form.appendChild(address_id);
 
+
         document.body.appendChild(form);
+
         form.submit();
+
     },
 
+
     "theme": {
+
         "color": "#ff4d6d"
+
     }
+
 };
+
 
 var rzp = new Razorpay(options);
 
-// 🔥 AUTO OPEN
+
+// AUTO OPEN PAYMENT
 rzp.open();
 
 </script>
+
 {% endif %}
+
+
+<!-- ========================================= -->
+<!-- DELIVERY ERROR POPUP -->
+<!-- ========================================= -->
+
+{% if error %}
+
+<script>
+
+setTimeout(function () {
+
+    const popup =
+        document.getElementById("deliveryErrorPopup");
+
+    if (popup) {
+
+        popup.style.opacity = "0";
+
+        popup.style.transform =
+            "translateY(-10px)";
+
+        setTimeout(function () {
+
+            popup.remove();
+
+        }, 400);
+
+    }
+
+}, 10000);
+
+
+function closeDeliveryError() {
+
+    const popup =
+        document.getElementById("deliveryErrorPopup");
+
+    if (popup) {
+
+        popup.remove();
+
+    }
+
+}
+
+</script>
+
+{% endif %}
+
 
 {% endblock %}

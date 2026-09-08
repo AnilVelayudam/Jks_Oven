@@ -4,7 +4,15 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 from decimal import Decimal
 from django.views.decorators.csrf import csrf_exempt
-from .models import Product,ProductOption, Order, OrderItem, Address, Review
+from .models import (
+    Product,
+    ProductOption,
+    Order,
+    OrderItem,
+    Address,
+    Review,
+    DeliveryPincode,
+)
 from .forms import ReviewForm
 
 from django.contrib.auth.decorators import login_required
@@ -556,7 +564,41 @@ def remove_from_cart(request, key):
     request.session['cart'] = cart
     return redirect('cart')
 
+# ============================================================
+# DELIVERY CHECK
+# ============================================================
 
+def check_product_delivery(product, address):
+    """
+    JK's Oven delivery rules:
+
+    Cookie:
+        Available across Bengaluru / Bangalore, Karnataka.
+
+    All other products:
+        Available only for PIN code 560043.
+    """
+
+    pincode = str(address.pincode or "").strip()
+    city = str(address.city or "").strip().lower()
+    state = str(address.state or "").strip().lower()
+
+    # 🍪 COOKIE → ALL BENGALURU / BANGALORE
+    if product.category == "cookie":
+        bangalore_cities = [
+            "bengaluru",
+            "bangalore",
+            "bengaluru urban",
+            "bangalore urban",
+        ]
+
+        return (
+            city in bangalore_cities
+            and state in ["karnataka", "ka"]
+        )
+
+    # 🍰 ALL OTHER PRODUCTS → ONLY 560043
+    return pincode == "560043"
 
 # ================= CHECKOUT =================
 from django.contrib.auth.decorators import login_required
@@ -662,7 +704,42 @@ def checkout(request):
                 "error": "Please select an address"
             })
 
-        address = Address.objects.get(id=address_id)
+        
+        address = get_object_or_404(
+            Address,
+            id=address_id,
+            user=request.user
+        )
+
+        # ============================================================
+        # DELIVERY VALIDATION
+        # ============================================================
+
+        delivery_errors = []
+
+        for item in cart_items:
+            product = item["product"]
+
+            if not check_product_delivery(product, address):
+                if product.category == "cookie":
+                    delivery_errors.append(
+                        f"{product.name} (Cookie) is available only in Bengaluru."
+                    )
+                else:
+                    delivery_errors.append(
+                        f"{product.name} is available only for PIN code 560043."
+                    )
+
+        # ❌ STOP ORDER IF DELIVERY IS NOT AVAILABLE
+        if delivery_errors:
+            return render(request, "checkout.html", {
+                "total": total,
+                "addresses": addresses,
+                "cart_items": cart_items,
+                "selected_address": address_id,
+                "error": "Delivery is not available for: "
+                        + " ".join(delivery_errors),
+    })
 
         # ================= COD =================
         if payment_method == "cod":

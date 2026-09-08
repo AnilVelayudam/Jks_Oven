@@ -169,3 +169,18 @@ class ProductImage(models.Model):
     def __str__(self):
         return f"{self.product.name} Image"
     
+
+
+class DeliveryPincode(models.Model):
+    pincode = models.CharField(max_length=6, unique=True)
+    city = models.CharField(max_length=100)
+    state = models.CharField(max_length=100)
+
+    # Can cakes and other local products be delivered?
+    local_delivery = models.BooleanField(default=False)
+
+    # Can cookies be delivered?
+    cookie_delivery = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.pincode} - {self.city}"

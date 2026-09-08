@@ -1,6 +1,14 @@
 from django.contrib import admin
-from .models import Product, ProductOption, Order, OrderItem, Review, Address, ProductImage
-
+from .models import (
+    Product,
+    ProductOption,
+    Order,
+    OrderItem,
+    Review,
+    Address,
+    ProductImage,
+    DeliveryPincode,
+)
 
 # ---------------- PRODUCT IMAGE INLINE ----------------
 
@@ -105,3 +113,4 @@ class OrderAdmin(admin.ModelAdmin):
 admin.site.register(OrderItem)
 admin.site.register(Review)
 admin.site.register(Address)
+admin.site.register(DeliveryPincode)
